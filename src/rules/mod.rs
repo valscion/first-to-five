@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fmt;
 
+#[derive(fmt::Debug, PartialEq)]
 pub enum Player {
   Naught,
   Cross,
@@ -28,6 +29,11 @@ impl GameArea {
   pub fn mark(&mut self, player: Player, x: u128, y: u128) {
     let key = format!("{},{}", x, y);
     self.games.insert(key, player);
+  }
+
+  pub fn winner(&self) -> Option<Player> {
+    // TODO: Calculate a potential winner!
+    None
   }
 }
 
@@ -91,5 +97,25 @@ mod tests {
     area.mark(Player::Naught, 2, 0);
     area.mark(Player::Cross, 1, 1);
     assert_eq!(format!("{}", area), "⌜⎺⎺⎺⌝\n|o o|\n| x |\n⌞⎽⎽⎽⌟");
+  }
+
+  #[test]
+  fn test_winner_horizontal() {
+    // Create a 6x6 initial game area
+    let mut area = GameArea::new(6, 6);
+    // Initially nobody should've won yet
+    assert!(
+      area.winner().is_none(),
+      "Initially no player should have won"
+    );
+
+    // Test that four of same player horizontally won't yet give a winner
+    for x in 1..5 {
+      area.mark(Player::Naught, x, 2);
+      assert!(area.winner().is_none(), "No player should've won yet");
+    }
+    // Adding the fifth element completes and a winner should be selected
+    area.mark(Player::Naught, 5, 2);
+    assert_eq!(area.winner().unwrap(), Player::Naught);
   }
 }

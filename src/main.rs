@@ -14,4 +14,9 @@ fn main() {
         area.mark(Player::Naught, 9, y);
     }
     println!("{}", area);
+    match area.winner() {
+        Some(Player::Naught) => println!("Naught has won!"),
+        Some(Player::Cross) => println!("Cross has won!"),
+        None => println!("No winner yet..."),
+    }
 }
