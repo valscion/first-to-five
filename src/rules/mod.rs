@@ -83,4 +83,13 @@ mod tests {
     area.mark(Player::Cross, 1, 1);
     assert_eq!(format!("{}", area), "⌜⎺⎺⌝\n|oo|\n|xx|\n⌞⎽⎽⌟");
   }
+
+  #[test]
+  fn test_partial_area() {
+    let mut area = GameArea::new(3, 2);
+    area.mark(Player::Naught, 0, 0);
+    area.mark(Player::Naught, 2, 0);
+    area.mark(Player::Cross, 1, 1);
+    assert_eq!(format!("{}", area), "⌜⎺⎺⎺⌝\n|o o|\n| x |\n⌞⎽⎽⎽⌟");
+  }
 }
