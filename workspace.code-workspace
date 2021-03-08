@@ -50,6 +50,25 @@
           "clear": true
         },
         "problemMatcher": ["$rustc"]
+      },
+      {
+        "label": "cargo test all files",
+        "type": "shell",
+        "command": "cargo",
+        "args": ["test"],
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "dedicated",
+          "showReuseMessage": false,
+          "clear": true
+        },
+        "problemMatcher": ["$rustc"],
+        "group": {
+          "kind": "test",
+          "isDefault": true
+        }
       }
     ]
   },

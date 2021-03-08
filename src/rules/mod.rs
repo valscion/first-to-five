@@ -54,6 +54,33 @@ impl fmt::Display for GameArea {
     for _ in 0..self.width {
       write!(f, "⎽")?;
     }
-    writeln!(f, "⌟")
+    write!(f, "⌟")
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_format_empty_area() {
+    let area = GameArea::new(0, 0);
+    assert_eq!(format!("{}", area), "⌜⌝\n⌞⌟");
+  }
+
+  #[test]
+  fn test_empty_two_by_one_area() {
+    let area = GameArea::new(2, 1);
+    assert_eq!(format!("{}", area), "⌜⎺⎺⌝\n|  |\n⌞⎽⎽⌟");
+  }
+
+  #[test]
+  fn test_full_area() {
+    let mut area = GameArea::new(2, 2);
+    area.mark(Player::Naught, 0, 0);
+    area.mark(Player::Naught, 1, 0);
+    area.mark(Player::Cross, 0, 1);
+    area.mark(Player::Cross, 1, 1);
+    assert_eq!(format!("{}", area), "⌜⎺⎺⌝\n|oo|\n|xx|\n⌞⎽⎽⌟");
   }
 }
