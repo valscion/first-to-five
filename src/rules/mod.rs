@@ -67,14 +67,18 @@ impl fmt::Display for GameArea {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use indoc::indoc;
+  use pretty_assertions::assert_eq;
 
   #[test]
   fn test_format_empty_area() {
     let area = GameArea::new(0, 0);
     assert_eq!(
-      format!("{}", area),
-      "⌜⌝\n\
-       ⌞⌟"
+      format!("{}\n", area),
+      indoc! {"
+        ⌜⌝
+        ⌞⌟
+      "}
     );
   }
 
@@ -82,10 +86,12 @@ mod tests {
   fn test_empty_two_by_one_area() {
     let area = GameArea::new(2, 1);
     assert_eq!(
-      format!("{}", area),
-      "⌜⎺⎺⌝\n\
-       |  |\n\
-       ⌞⎽⎽⌟"
+      format!("{}\n", area),
+      indoc! {"
+        ⌜⎺⎺⌝
+        |  |
+        ⌞⎽⎽⌟
+      "}
     );
   }
 
@@ -97,11 +103,13 @@ mod tests {
     area.mark(Player::Cross, 0, 1);
     area.mark(Player::Cross, 1, 1);
     assert_eq!(
-      format!("{}", area),
-      "⌜⎺⎺⌝\n\
-       |oo|\n\
-       |xx|\n\
-       ⌞⎽⎽⌟"
+      format!("{}\n", area),
+      indoc! {"
+        ⌜⎺⎺⌝
+        |oo|
+        |xx|
+        ⌞⎽⎽⌟
+      "}
     );
   }
 
@@ -112,11 +120,13 @@ mod tests {
     area.mark(Player::Naught, 2, 0);
     area.mark(Player::Cross, 1, 1);
     assert_eq!(
-      format!("{}", area),
-      "⌜⎺⎺⎺⌝\n\
-       |o o|\n\
-       | x |\n\
-       ⌞⎽⎽⎽⌟"
+      format!("{}\n", area),
+      indoc! {"
+        ⌜⎺⎺⎺⌝
+        |o o|
+        | x |
+        ⌞⎽⎽⎽⌟
+      "}
     );
   }
 
