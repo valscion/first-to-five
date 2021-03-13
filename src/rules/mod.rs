@@ -40,7 +40,6 @@ impl GameArea {
   ///    .x..",
   /// );
   /// ```
-  #[cfg(test)]
   pub fn from_template(template: &'static str) -> Self {
     let lines: Vec<&str> = template.split("\n").collect();
     let height = lines.len() as u128;
