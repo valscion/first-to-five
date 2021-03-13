@@ -67,26 +67,39 @@ impl fmt::Display for GameArea {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use pretty_assertions::assert_eq;
+
+  fn assert_area_formatted_to(area: &GameArea, expected: &str) {
+    let formatted_area = format!("{}", area);
+
+    assert_eq!(
+      formatted_area,
+      expected,
+      "{}",
+      colored_diff::PrettyDifference {
+        expected,
+        actual: &formatted_area
+      }
+    );
+  }
 
   #[test]
   fn test_format_empty_area() {
     let area = GameArea::new(0, 0);
-    assert_eq!(
-      format!("{}", area),
+    assert_area_formatted_to(
+      &area,
       "⌜⌝\n\
-       ⌞⌟"
+       ⌞⌟",
     );
   }
 
   #[test]
   fn test_empty_two_by_one_area() {
     let area = GameArea::new(2, 1);
-    assert_eq!(
-      format!("{}", area),
+    assert_area_formatted_to(
+      &area,
       "⌜⎺⎺⌝\n\
        |  |\n\
-       ⌞⎽⎽⌟"
+       ⌞⎽⎽⌟",
     );
   }
 
@@ -97,12 +110,12 @@ mod tests {
     area.mark(Player::Naught, 1, 0);
     area.mark(Player::Cross, 0, 1);
     area.mark(Player::Cross, 1, 1);
-    assert_eq!(
-      format!("{}", area),
+    assert_area_formatted_to(
+      &area,
       "⌜⎺⎺⌝\n\
        |oo|\n\
        |xx|\n\
-       ⌞⎽⎽⌟"
+       ⌞⎽⎽⌟",
     );
   }
 
@@ -112,12 +125,12 @@ mod tests {
     area.mark(Player::Naught, 0, 0);
     area.mark(Player::Naught, 2, 0);
     area.mark(Player::Cross, 1, 1);
-    assert_eq!(
-      format!("{}", area),
+    assert_area_formatted_to(
+      &area,
       "⌜⎺⎺⎺⌝\n\
        |o o|\n\
        | x |\n\
-       ⌞⎽⎽⎽⌟"
+       ⌞⎽⎽⎽⌟",
     );
   }
 
