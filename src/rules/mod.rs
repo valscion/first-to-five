@@ -26,6 +26,48 @@ impl GameArea {
     }
   }
 
+  /// Creates a new GameArea from a static template string
+  ///
+  /// Example creating a 4x5 area with a vertical line for
+  /// Player::Cross in the second column from top to bottom:
+  ///
+  /// ```
+  /// let area = GameArea::from_template(
+  ///   ".x..\n\
+  ///    .x..\n\
+  ///    .x..\n\
+  ///    .x..\n\
+  ///    .x..",
+  /// );
+  /// ```
+  #[cfg(test)]
+  pub fn from_template(template: &'static str) -> Self {
+    let lines: Vec<&str> = template.split("\n").collect();
+    let height = lines.len() as u128;
+    let width = lines[0].len() as u128;
+    let mut area = GameArea::new(width, height);
+    for (row, line) in lines.iter().enumerate() {
+      let row_width = line.chars().count();
+      assert_eq!(
+        row_width,
+        width as usize,
+        "All line should have same width. Row {row} had a width of {wrong_width} when expected was {expected_width}",
+        row = row + 1,
+        wrong_width = row_width,
+        expected_width = width
+      );
+      for (column, character) in line.chars().enumerate() {
+        match character {
+          '.' => { /* blank, do nothing */ }
+          'x' => area.mark(Player::Cross, column as u128, row as u128),
+          'o' => area.mark(Player::Naught, column as u128, row as u128),
+          _ => panic!("Invalid template character: '{}'", character),
+        }
+      }
+    }
+    area
+  }
+
   pub fn mark(&mut self, player: Player, x: u128, y: u128) {
     let key = format!("{},{}", x, y);
     self.games.insert(key, player);
@@ -135,22 +177,95 @@ mod tests {
   }
 
   #[test]
+  fn test_area_from_template() {
+    let area = GameArea::from_template(
+      "....\n\
+       .x..\n\
+       ..o.\n\
+       .xx.\n\
+       x..x",
+    );
+    assert_area_formatted_to(
+      &area,
+      "⌜⎺⎺⎺⎺⌝\n\
+       |    |\n\
+       | x  |\n\
+       |  o |\n\
+       | xx |\n\
+       |x  x|\n\
+       ⌞⎽⎽⎽⎽⌟",
+    );
+  }
+
+  #[test]
+  fn test_no_winner() {
+    let area = GameArea::from_template(
+      ".x..oo\n\
+       .x..o.\n\
+       .oooo.\n\
+       xoxxxx\n\
+       .x..o.",
+    );
+    assert_eq!(area.winner(), None);
+  }
+
+  #[test]
   fn test_winner_horizontal() {
-    // Create a 6x6 initial game area
-    let mut area = GameArea::new(6, 6);
-    // Initially nobody should've won yet
-    assert!(
-      area.winner().is_none(),
-      "Initially no player should have won"
+    assert_eq!(
+      GameArea::from_template(
+        "......\n\
+         ......\n\
+         .ooooo\n\
+         ......\n\
+         ......",
+      )
+      .winner()
+      .unwrap(),
+      Player::Naught
     );
 
-    // Test that four of same player horizontally won't yet give a winner
-    for x in 1..5 {
-      area.mark(Player::Naught, x, 2);
-      assert!(area.winner().is_none(), "No player should've won yet");
-    }
-    // Adding the fifth element completes and a winner should be selected
-    area.mark(Player::Naught, 5, 2);
-    assert_eq!(area.winner().unwrap(), Player::Naught);
+    assert_eq!(
+      GameArea::from_template(
+        "......\n\
+         ......\n\
+         .xxxxx\n\
+         ......\n\
+         ......",
+      )
+      .winner()
+      .unwrap(),
+      Player::Cross
+    );
+  }
+
+  #[test]
+  fn test_winner_vertical() {
+    assert_eq!(
+      GameArea::from_template(
+        "...o..\n\
+         ...o..\n\
+         ...o..\n\
+         ...o..\n\
+         ...o..\n\
+         ......",
+      )
+      .winner()
+      .unwrap(),
+      Player::Naught
+    );
+
+    assert_eq!(
+      GameArea::from_template(
+        "......\n\
+         ...x..\n\
+         ...x..\n\
+         ...x..\n\
+         ...x..\n\
+         ...x..",
+      )
+      .winner()
+      .unwrap(),
+      Player::Cross
+    );
   }
 }
