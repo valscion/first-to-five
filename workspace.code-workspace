@@ -9,7 +9,8 @@
     "recommendations": [
       "rust-lang.rust",
       "vadimcn.vscode-lldb",
-      "bungcip.better-toml"
+      "bungcip.better-toml",
+      "gruntfuggly.triggertaskonsave"
     ]
   },
   "tasks": {
@@ -91,6 +92,9 @@
   "settings": {
     "[rust]": {
       "editor.formatOnSave": true
+    },
+    "triggerTaskOnSave.tasks": {
+      "cargo test all files": ["src/**/*.rs"]
     }
   }
 }
