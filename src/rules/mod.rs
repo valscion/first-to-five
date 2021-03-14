@@ -82,20 +82,17 @@ impl GameArea {
 
   fn horizontal_winner(&self) -> Option<Player> {
     for y in 0..self.height {
-      let mut last_seen_player: Option<Player> = None;
-      let mut same_player_seen_times = 0;
-      for x in 0..self.width {
-        if let Some(&player) = self.games.get(&format!("{},{}", x, y)) {
-          if last_seen_player.is_none() || last_seen_player == Some(player) {
-            same_player_seen_times += 1;
-            if same_player_seen_times == 5 {
-              return Some(player);
-            }
+      for x in 0..(self.width - 4) {
+        if let Some(&first) = self.games.get(&format!("{},{}", x, y)) {
+          let next_cells = vec![
+            self.games.get(&format!("{},{}", x + 1, y)),
+            self.games.get(&format!("{},{}", x + 2, y)),
+            self.games.get(&format!("{},{}", x + 3, y)),
+            self.games.get(&format!("{},{}", x + 4, y)),
+          ];
+          if next_cells.iter().all(|&item| item == Some(&first)) {
+            return Some(first);
           }
-          last_seen_player = Some(player);
-        } else {
-          last_seen_player = None;
-          same_player_seen_times = 0;
         }
       }
     }
@@ -103,21 +100,18 @@ impl GameArea {
   }
 
   fn vertical_winner(&self) -> Option<Player> {
-    for x in 0..self.width {
-      let mut last_seen_player: Option<Player> = None;
-      let mut same_player_seen_times = 0;
-      for y in 0..self.height {
-        if let Some(&player) = self.games.get(&format!("{},{}", x, y)) {
-          if last_seen_player.is_none() || last_seen_player == Some(player) {
-            same_player_seen_times += 1;
-            if same_player_seen_times == 5 {
-              return Some(player);
-            }
+    for y in 0..(self.height - 4) {
+      for x in 0..self.width {
+        if let Some(&first) = self.games.get(&format!("{},{}", x, y)) {
+          let next_cells = vec![
+            self.games.get(&format!("{},{}", x, y + 1)),
+            self.games.get(&format!("{},{}", x, y + 2)),
+            self.games.get(&format!("{},{}", x, y + 3)),
+            self.games.get(&format!("{},{}", x, y + 4)),
+          ];
+          if next_cells.iter().all(|&item| item == Some(&first)) {
+            return Some(first);
           }
-          last_seen_player = Some(player);
-        } else {
-          last_seen_player = None;
-          same_player_seen_times = 0;
         }
       }
     }
