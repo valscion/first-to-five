@@ -73,7 +73,14 @@ impl GameArea {
   }
 
   pub fn winner(&self) -> Option<Player> {
-    // First test if anyones won horizontally
+    self
+      .horizontal_winner()
+      .or(self.vertical_winner())
+      .or(self.diagonal_from_top_left_to_bottom_right())
+      .or(self.diagonal_from_top_right_to_bottom_left())
+  }
+
+  fn horizontal_winner(&self) -> Option<Player> {
     for y in 0..self.height {
       let mut last_seen_player: Option<Player> = None;
       let mut same_player_seen_times = 0;
@@ -92,7 +99,10 @@ impl GameArea {
         }
       }
     }
-    // Then test if anyones won vertically
+    None
+  }
+
+  fn vertical_winner(&self) -> Option<Player> {
     for x in 0..self.width {
       let mut last_seen_player: Option<Player> = None;
       let mut same_player_seen_times = 0;
@@ -111,6 +121,15 @@ impl GameArea {
         }
       }
     }
+    None
+  }
+
+  fn diagonal_from_top_left_to_bottom_right(&self) -> Option<Player> {
+    // TODO: Calculate a potential winner diagonally!
+    None
+  }
+
+  fn diagonal_from_top_right_to_bottom_left(&self) -> Option<Player> {
     // TODO: Calculate a potential winner diagonally!
     None
   }
