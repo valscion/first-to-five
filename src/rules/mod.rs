@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fmt;
 
-#[derive(fmt::Debug, PartialEq)]
+#[derive(fmt::Debug, PartialEq, Clone, Copy)]
 pub enum Player {
   Naught,
   Cross,
@@ -75,33 +75,20 @@ impl GameArea {
   pub fn winner(&self) -> Option<Player> {
     // First test if anyones won horizontally
     for y in 0..self.height {
-      let mut last_seen_player: Option<&Player> = None;
+      let mut last_seen_player: Option<Player> = None;
       let mut same_player_seen_times = 0;
       for x in 0..self.width {
-        let key = format!("{},{}", x, y);
-        let player = self.games.get(&key);
-        match &player {
-          None => {
-            last_seen_player = None;
-            same_player_seen_times = 0;
-          }
-          _ if player == last_seen_player => {
+        if let Some(&player) = self.games.get(&format!("{},{}", x, y)) {
+          if last_seen_player.is_none() || last_seen_player == Some(player) {
             same_player_seen_times += 1;
-          }
-          _ => {
-            last_seen_player = player;
-            same_player_seen_times = 1;
-          }
-        }
-        if same_player_seen_times == 5 {
-          match last_seen_player.unwrap() {
-            Player::Cross => {
-              return Some(Player::Cross);
-            }
-            Player::Naught => {
-              return Some(Player::Naught);
+            if same_player_seen_times == 5 {
+              return Some(player);
             }
           }
+          last_seen_player = Some(player);
+        } else {
+          last_seen_player = None;
+          same_player_seen_times = 0;
         }
       }
     }
