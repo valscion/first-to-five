@@ -84,7 +84,7 @@ impl GameArea {
     for y in 0..self.height {
       for x in 0..(self.width - 4) {
         if let Some(&first) = self.games.get(&format!("{},{}", x, y)) {
-          let next_cells = vec![
+          let next_cells = [
             self.games.get(&format!("{},{}", x + 1, y)),
             self.games.get(&format!("{},{}", x + 2, y)),
             self.games.get(&format!("{},{}", x + 3, y)),
@@ -103,7 +103,7 @@ impl GameArea {
     for y in 0..(self.height - 4) {
       for x in 0..self.width {
         if let Some(&first) = self.games.get(&format!("{},{}", x, y)) {
-          let next_cells = vec![
+          let next_cells = [
             self.games.get(&format!("{},{}", x, y + 1)),
             self.games.get(&format!("{},{}", x, y + 2)),
             self.games.get(&format!("{},{}", x, y + 3)),
@@ -122,7 +122,7 @@ impl GameArea {
     for y in 0..(self.height - 4) {
       for x in 0..(self.width - 4) {
         if let Some(&first) = self.games.get(&format!("{},{}", x, y)) {
-          let next_cells = vec![
+          let next_cells = [
             self.games.get(&format!("{},{}", x + 1, y + 1)),
             self.games.get(&format!("{},{}", x + 2, y + 2)),
             self.games.get(&format!("{},{}", x + 3, y + 3)),
@@ -141,7 +141,7 @@ impl GameArea {
     for y in 0..(self.height - 4) {
       for x in 4..self.width {
         if let Some(&first) = self.games.get(&format!("{},{}", x, y)) {
-          let next_cells = vec![
+          let next_cells = [
             self.games.get(&format!("{},{}", x - 1, y + 1)),
             self.games.get(&format!("{},{}", x - 2, y + 2)),
             self.games.get(&format!("{},{}", x - 3, y + 3)),
