@@ -92,7 +92,26 @@ impl GameArea {
         }
       }
     }
-    // TODO: Calculate a potential winner!
+    // Then test if anyones won vertically
+    for x in 0..self.width {
+      let mut last_seen_player: Option<Player> = None;
+      let mut same_player_seen_times = 0;
+      for y in 0..self.height {
+        if let Some(&player) = self.games.get(&format!("{},{}", x, y)) {
+          if last_seen_player.is_none() || last_seen_player == Some(player) {
+            same_player_seen_times += 1;
+            if same_player_seen_times == 5 {
+              return Some(player);
+            }
+          }
+          last_seen_player = Some(player);
+        } else {
+          last_seen_player = None;
+          same_player_seen_times = 0;
+        }
+      }
+    }
+    // TODO: Calculate a potential winner diagonally!
     None
   }
 }
