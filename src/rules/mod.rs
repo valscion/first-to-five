@@ -73,82 +73,55 @@ impl GameArea {
   }
 
   pub fn winner(&self) -> Option<Player> {
-    self
-      .horizontal_winner()
-      .or(self.vertical_winner())
-      .or(self.diagonal_from_top_left_to_bottom_right())
-      .or(self.diagonal_from_top_right_to_bottom_left())
-  }
-
-  fn horizontal_winner(&self) -> Option<Player> {
     for y in 0..self.height {
-      for x in 0..(self.width - 4) {
+      for x in 0..self.width {
         if let Some(&first) = self.games.get(&format!("{},{}", x, y)) {
-          let next_cells = [
+          let horizontal_next_cells = [
             self.games.get(&format!("{},{}", x + 1, y)),
             self.games.get(&format!("{},{}", x + 2, y)),
             self.games.get(&format!("{},{}", x + 3, y)),
             self.games.get(&format!("{},{}", x + 4, y)),
           ];
-          if next_cells.iter().all(|&item| item == Some(&first)) {
+          if horizontal_next_cells
+            .iter()
+            .all(|&item| item == Some(&first))
+          {
             return Some(first);
           }
-        }
-      }
-    }
-    None
-  }
 
-  fn vertical_winner(&self) -> Option<Player> {
-    for y in 0..(self.height - 4) {
-      for x in 0..self.width {
-        if let Some(&first) = self.games.get(&format!("{},{}", x, y)) {
-          let next_cells = [
+          let vertical_next_cells = [
             self.games.get(&format!("{},{}", x, y + 1)),
             self.games.get(&format!("{},{}", x, y + 2)),
             self.games.get(&format!("{},{}", x, y + 3)),
             self.games.get(&format!("{},{}", x, y + 4)),
           ];
-          if next_cells.iter().all(|&item| item == Some(&first)) {
+          if vertical_next_cells.iter().all(|&item| item == Some(&first)) {
             return Some(first);
           }
-        }
-      }
-    }
-    None
-  }
 
-  fn diagonal_from_top_left_to_bottom_right(&self) -> Option<Player> {
-    for y in 0..(self.height - 4) {
-      for x in 0..(self.width - 4) {
-        if let Some(&first) = self.games.get(&format!("{},{}", x, y)) {
-          let next_cells = [
+          let diagonally_down_from_left_to_right_next_cells = [
             self.games.get(&format!("{},{}", x + 1, y + 1)),
             self.games.get(&format!("{},{}", x + 2, y + 2)),
             self.games.get(&format!("{},{}", x + 3, y + 3)),
             self.games.get(&format!("{},{}", x + 4, y + 4)),
           ];
-          if next_cells.iter().all(|&item| item == Some(&first)) {
+          if diagonally_down_from_left_to_right_next_cells
+            .iter()
+            .all(|&item| item == Some(&first))
+          {
             return Some(first);
           }
-        }
-      }
-    }
-    None
-  }
 
-  fn diagonal_from_top_right_to_bottom_left(&self) -> Option<Player> {
-    for y in 0..(self.height - 4) {
-      for x in 4..self.width {
-        if let Some(&first) = self.games.get(&format!("{},{}", x, y)) {
-          let next_cells = [
-            self.games.get(&format!("{},{}", x - 1, y + 1)),
-            self.games.get(&format!("{},{}", x - 2, y + 2)),
-            self.games.get(&format!("{},{}", x - 3, y + 3)),
-            self.games.get(&format!("{},{}", x - 4, y + 4)),
-          ];
-          if next_cells.iter().all(|&item| item == Some(&first)) {
-            return Some(first);
+          if x >= 4 {
+            let next_cells = [
+              self.games.get(&format!("{},{}", x - 1, y + 1)),
+              self.games.get(&format!("{},{}", x - 2, y + 2)),
+              self.games.get(&format!("{},{}", x - 3, y + 3)),
+              self.games.get(&format!("{},{}", x - 4, y + 4)),
+            ];
+            if next_cells.iter().all(|&item| item == Some(&first)) {
+              return Some(first);
+            }
           }
         }
       }
