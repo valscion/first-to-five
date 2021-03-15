@@ -72,16 +72,28 @@ impl GameArea {
   }
 
   pub fn mark(&mut self, player: Player, x: i128, y: i128) {
-    if x < self.left {
+    if self.left == 0 && self.right == 0 && self.top == 0 && self.bottom == 0 {
+      // We need to set the origin to be the place where the first mark comes
       self.left = x;
-    } else if x >= self.right {
       self.right = x + 1;
-    }
-
-    if y < self.top {
       self.top = y;
-    } else if y >= self.bottom {
       self.bottom = y + 1;
+    } else {
+      if x < self.left {
+        // We're going more to the left than the left side was
+        self.left = x;
+      } else if x >= self.right {
+        // We're going more to the right than we had space
+        self.right = x + 1;
+      }
+
+      if y < self.top {
+        // We're going more to the top than top side was
+        self.top = y;
+      } else if y >= self.bottom {
+        // We're going more to the bottom than we had space
+        self.bottom = y + 1;
+      }
     }
 
     let key = format!("{},{}", x, y);
