@@ -7,6 +7,7 @@ pub enum Player {
   Cross,
 }
 
+#[derive(Default)]
 pub struct GameArea {
   left: i128,
   top: i128,
@@ -20,16 +21,6 @@ pub struct GameArea {
 }
 
 impl GameArea {
-  pub fn new(width: i128, height: i128) -> Self {
-    GameArea {
-      left: 0,
-      top: 0,
-      right: width,
-      bottom: height,
-      games: HashMap::default(),
-    }
-  }
-
   /// Creates a new GameArea from a static template string
   ///
   /// Example creating a 4x5 area with a vertical line for
@@ -46,9 +37,8 @@ impl GameArea {
   /// ```
   pub fn from_template(template: &'static str) -> Self {
     let lines: Vec<&str> = template.split("\n").collect();
-    let height = lines.len() as i128;
     let width = lines[0].len() as i128;
-    let mut area = GameArea::new(width, height);
+    let mut area = GameArea::default();
     for (row, line) in lines.iter().enumerate() {
       let row_width = line.chars().count();
       assert_eq!(
@@ -204,7 +194,7 @@ mod tests {
 
   #[test]
   fn test_format_empty_area() {
-    let area = GameArea::new(0, 0);
+    let area = GameArea::default();
     assert_area_formatted_to(
       &area,
       "⌜⌝\n\
@@ -213,19 +203,8 @@ mod tests {
   }
 
   #[test]
-  fn test_empty_two_by_one_area() {
-    let area = GameArea::new(2, 1);
-    assert_area_formatted_to(
-      &area,
-      "⌜⎺⎺⌝\n\
-       |  |\n\
-       ⌞⎽⎽⌟",
-    );
-  }
-
-  #[test]
   fn test_full_area() {
-    let mut area = GameArea::new(2, 2);
+    let mut area = GameArea::default();
     area.mark(Player::Naught, 0, 0);
     area.mark(Player::Naught, 1, 0);
     area.mark(Player::Cross, 0, 1);
@@ -241,7 +220,7 @@ mod tests {
 
   #[test]
   fn test_partial_area() {
-    let mut area = GameArea::new(3, 2);
+    let mut area = GameArea::default();
     area.mark(Player::Naught, 0, 0);
     area.mark(Player::Naught, 2, 0);
     area.mark(Player::Cross, 1, 1);
@@ -257,7 +236,7 @@ mod tests {
   proptest! {
   #[test]
   fn test_area_enlargening(origin_x in -10..10i128, origin_y in -10..10i128) {
-    let mut area = GameArea::new(0, 0);
+    let mut area = GameArea::default();
     // First the area should be empty
     assert_area_formatted_to(
       &area,
@@ -321,8 +300,8 @@ mod tests {
   #[test]
   fn test_area_from_template() {
     let area = GameArea::from_template(
-      "....\n\
-       .x..\n\
+      ".x..\n\
+       ....\n\
        ..o.\n\
        .xx.\n\
        x..x",
@@ -330,8 +309,8 @@ mod tests {
     assert_area_formatted_to(
       &area,
       "⌜⎺⎺⎺⎺⌝\n\
-       |    |\n\
        | x  |\n\
+       |    |\n\
        |  o |\n\
        | xx |\n\
        |x  x|\n\
