@@ -174,6 +174,7 @@ impl fmt::Display for GameArea {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use proptest::prelude::*;
 
   fn assert_area_formatted_to(area: &GameArea, expected: &str) {
     let formatted_area = format!("{}", area);
@@ -241,8 +242,9 @@ mod tests {
     );
   }
 
+  proptest! {
   #[test]
-  fn test_area_enlargening() {
+  fn test_area_enlargening(origin_x in -10..10i128, origin_y in -10..10i128) {
     let mut area = GameArea::new(0, 0);
     // First the area should be empty
     assert_area_formatted_to(
@@ -252,8 +254,6 @@ mod tests {
     );
     // When we add our first mark, the area should get to become 1x1 sized
     // and our first mark is the origin, regardless what x,y combination we gave.
-    let origin_x = 0;
-    let origin_y = 0;
     area.mark(Player::Cross, origin_x, origin_y);
     assert_area_formatted_to(
       &area,
@@ -269,7 +269,6 @@ mod tests {
        |xo|\n\
        ⌞⎽⎽⌟",
     );
-
     // Then let's go more to the left of the original left side and watch the area grow
     area.mark(Player::Cross, origin_x - 3, origin_y);
     assert_area_formatted_to(
@@ -278,7 +277,6 @@ mod tests {
        |x  xo|\n\
        ⌞⎽⎽⎽⎽⎽⌟",
     );
-
     // And then more to the top than originally was
     area.mark(Player::Naught, origin_x, origin_y - 4);
     assert_area_formatted_to(
@@ -305,6 +303,7 @@ mod tests {
        |    x|\n\
        ⌞⎽⎽⎽⎽⎽⌟",
     );
+  }
   }
 
   #[test]
