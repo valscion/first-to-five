@@ -154,6 +154,7 @@ mod tests {
   /// ```
   fn create_area_from_template(template: &'static str) -> GameArea {
     let lines: Vec<&str> = template.split("\n").collect();
+    let height = lines.len() as i128;
     let width = lines[0].len() as i128;
     let mut area = GameArea::default();
     for (row, line) in lines.iter().enumerate() {
@@ -175,6 +176,16 @@ mod tests {
         }
       }
     }
+    assert_eq!(
+      (area.left - area.right).abs(),
+      width,
+      "The created area width isn't the same width as the template string. Maybe the rightmost or leftmost column was empty?"
+    );
+    assert_eq!(
+      (area.top - area.bottom).abs(),
+      height,
+      "The created area height isn't the same height as the template string. Maybe the topmost or bottommost column was empty?"
+    );
     area
   }
 
@@ -334,11 +345,11 @@ mod tests {
   fn test_winner_horizontal() {
     assert_eq!(
       create_area_from_template(
-        "......\n\
+        "x.....\n\
          ......\n\
          .ooooo\n\
          ......\n\
-         ......",
+         .....x",
       )
       .winner()
       .unwrap(),
@@ -347,11 +358,11 @@ mod tests {
 
     assert_eq!(
       create_area_from_template(
-        "......\n\
+        "o.....\n\
          ......\n\
          .xxxxx\n\
          ......\n\
-         ......",
+         .....o",
       )
       .winner()
       .unwrap(),
@@ -363,12 +374,12 @@ mod tests {
   fn test_winner_vertical() {
     assert_eq!(
       create_area_from_template(
-        "...o..\n\
+        "x..o..\n\
          ...o..\n\
          ...o..\n\
          ...o..\n\
          ...o..\n\
-         ......",
+         .....x",
       )
       .winner()
       .unwrap(),
@@ -377,12 +388,12 @@ mod tests {
 
     assert_eq!(
       create_area_from_template(
-        "......\n\
+        "o.....\n\
          ...x..\n\
          ...x..\n\
          ...x..\n\
          ...x..\n\
-         ...x..",
+         ...x.o",
       )
       .winner()
       .unwrap(),
@@ -394,12 +405,12 @@ mod tests {
   fn test_winner_diagonally_down_from_left_to_right() {
     assert_eq!(
       create_area_from_template(
-        "o.....\n\
+        "o....x\n\
          .o....\n\
          ..o...\n\
          ...o..\n\
          ....o.\n\
-         ......",
+         x.....",
       )
       .winner()
       .unwrap(),
@@ -408,12 +419,12 @@ mod tests {
 
     assert_eq!(
       create_area_from_template(
-        "......\n\
+        ".....o\n\
          .x....\n\
          ..x...\n\
          ...x..\n\
          ....x.\n\
-         .....x",
+         o....x",
       )
       .winner()
       .unwrap(),
@@ -425,12 +436,12 @@ mod tests {
   fn test_winner_diagonally_down_from_right_to_left() {
     assert_eq!(
       create_area_from_template(
-        ".....o\n\
+        "x....o\n\
          ....o.\n\
          ...o..\n\
          ..o...\n\
          .o....\n\
-         ......",
+         .....x",
       )
       .winner()
       .unwrap(),
@@ -439,12 +450,12 @@ mod tests {
 
     assert_eq!(
       create_area_from_template(
-        "......\n\
+        "o.....\n\
          ....x.\n\
          ...x..\n\
          ..x...\n\
          .x....\n\
-         x.....",
+         x....o",
       )
       .winner()
       .unwrap(),
