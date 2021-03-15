@@ -251,7 +251,10 @@ mod tests {
        ⌞⌟",
     );
     // When we add our first mark, the area should get to become 1x1 sized
-    area.mark(Player::Cross, 0, 0);
+    // and our first mark is the origin, regardless what x,y combination we gave.
+    let origin_x = 0;
+    let origin_y = 0;
+    area.mark(Player::Cross, origin_x, origin_y);
     assert_area_formatted_to(
       &area,
       "⌜⎺⌝\n\
@@ -259,7 +262,7 @@ mod tests {
        ⌞⎽⌟",
     );
     // Then we push it one to the right with 1, it should grow
-    area.mark(Player::Naught, 1, 0);
+    area.mark(Player::Naught, origin_x + 1, origin_y);
     assert_area_formatted_to(
       &area,
       "⌜⎺⎺⌝\n\
@@ -268,7 +271,7 @@ mod tests {
     );
 
     // Then let's go more to the left of the original left side and watch the area grow
-    area.mark(Player::Cross, -3, 0);
+    area.mark(Player::Cross, origin_x - 3, origin_y);
     assert_area_formatted_to(
       &area,
       "⌜⎺⎺⎺⎺⎺⌝\n\
@@ -277,7 +280,7 @@ mod tests {
     );
 
     // And then more to the top than originally was
-    area.mark(Player::Naught, 0, -4);
+    area.mark(Player::Naught, origin_x, origin_y - 4);
     assert_area_formatted_to(
       &area,
       "⌜⎺⎺⎺⎺⎺⌝\n\
@@ -289,7 +292,7 @@ mod tests {
        ⌞⎽⎽⎽⎽⎽⌟",
     );
     // And finally more to the bottom than there was space
-    area.mark(Player::Cross, 1, 2);
+    area.mark(Player::Cross, origin_x + 1, origin_y + 2);
     assert_area_formatted_to(
       &area,
       "⌜⎺⎺⎺⎺⎺⌝\n\
