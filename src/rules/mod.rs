@@ -21,46 +21,6 @@ pub struct GameArea {
 }
 
 impl GameArea {
-  /// Creates a new GameArea from a static template string
-  ///
-  /// Example creating a 4x5 area with a vertical line for
-  /// Player::Cross in the second column from top to bottom:
-  ///
-  /// ```
-  /// let area = GameArea::from_template(
-  ///   ".x..\n\
-  ///    .x..\n\
-  ///    .x..\n\
-  ///    .x..\n\
-  ///    .x..",
-  /// );
-  /// ```
-  pub fn from_template(template: &'static str) -> Self {
-    let lines: Vec<&str> = template.split("\n").collect();
-    let width = lines[0].len() as i128;
-    let mut area = GameArea::default();
-    for (row, line) in lines.iter().enumerate() {
-      let row_width = line.chars().count();
-      assert_eq!(
-        row_width,
-        width as usize,
-        "All line should have same width. Row {row} had a width of {wrong_width} when expected was {expected_width}",
-        row = row + 1,
-        wrong_width = row_width,
-        expected_width = width
-      );
-      for (column, character) in line.chars().enumerate() {
-        match character {
-          '.' => { /* blank, do nothing */ }
-          'x' => area.mark(Player::Cross, column as i128, row as i128),
-          'o' => area.mark(Player::Naught, column as i128, row as i128),
-          _ => panic!("Invalid template character: '{}'", character),
-        }
-      }
-    }
-    area
-  }
-
   pub fn mark(&mut self, player: Player, x: i128, y: i128) {
     if self.left == 0 && self.right == 0 && self.top == 0 && self.bottom == 0 {
       // We need to set the origin to be the place where the first mark comes
@@ -177,6 +137,46 @@ impl fmt::Display for GameArea {
 mod tests {
   use super::*;
   use proptest::prelude::*;
+
+  /// Creates a new GameArea from a static template string
+  ///
+  /// Example creating a 4x5 area with a vertical line for
+  /// Player::Cross in the second column from top to bottom:
+  ///
+  /// ```
+  /// let area = create_area_from_template(
+  ///   ".x..\n\
+  ///    .x..\n\
+  ///    .x..\n\
+  ///    .x..\n\
+  ///    .x..",
+  /// );
+  /// ```
+  fn create_area_from_template(template: &'static str) -> GameArea {
+    let lines: Vec<&str> = template.split("\n").collect();
+    let width = lines[0].len() as i128;
+    let mut area = GameArea::default();
+    for (row, line) in lines.iter().enumerate() {
+      let row_width = line.chars().count();
+      assert_eq!(
+        row_width,
+        width as usize,
+        "All line should have same width. Row {row} had a width of {wrong_width} when expected was {expected_width}",
+        row = row + 1,
+        wrong_width = row_width,
+        expected_width = width
+      );
+      for (column, character) in line.chars().enumerate() {
+        match character {
+          '.' => { /* blank, do nothing */ }
+          'x' => area.mark(Player::Cross, column as i128, row as i128),
+          'o' => area.mark(Player::Naught, column as i128, row as i128),
+          _ => panic!("Invalid template character: '{}'", character),
+        }
+      }
+    }
+    area
+  }
 
   fn assert_area_formatted_to(area: &GameArea, expected: &str) {
     let formatted_area = format!("{}", area);
@@ -299,7 +299,7 @@ mod tests {
 
   #[test]
   fn test_area_from_template() {
-    let area = GameArea::from_template(
+    let area = create_area_from_template(
       ".x..\n\
        ....\n\
        ..o.\n\
@@ -320,7 +320,7 @@ mod tests {
 
   #[test]
   fn test_no_winner() {
-    let area = GameArea::from_template(
+    let area = create_area_from_template(
       ".x..oo\n\
        .x..o.\n\
        .oooo.\n\
@@ -333,7 +333,7 @@ mod tests {
   #[test]
   fn test_winner_horizontal() {
     assert_eq!(
-      GameArea::from_template(
+      create_area_from_template(
         "......\n\
          ......\n\
          .ooooo\n\
@@ -346,7 +346,7 @@ mod tests {
     );
 
     assert_eq!(
-      GameArea::from_template(
+      create_area_from_template(
         "......\n\
          ......\n\
          .xxxxx\n\
@@ -362,7 +362,7 @@ mod tests {
   #[test]
   fn test_winner_vertical() {
     assert_eq!(
-      GameArea::from_template(
+      create_area_from_template(
         "...o..\n\
          ...o..\n\
          ...o..\n\
@@ -376,7 +376,7 @@ mod tests {
     );
 
     assert_eq!(
-      GameArea::from_template(
+      create_area_from_template(
         "......\n\
          ...x..\n\
          ...x..\n\
@@ -393,7 +393,7 @@ mod tests {
   #[test]
   fn test_winner_diagonally_down_from_left_to_right() {
     assert_eq!(
-      GameArea::from_template(
+      create_area_from_template(
         "o.....\n\
          .o....\n\
          ..o...\n\
@@ -407,7 +407,7 @@ mod tests {
     );
 
     assert_eq!(
-      GameArea::from_template(
+      create_area_from_template(
         "......\n\
          .x....\n\
          ..x...\n\
@@ -424,7 +424,7 @@ mod tests {
   #[test]
   fn test_winner_diagonally_down_from_right_to_left() {
     assert_eq!(
-      GameArea::from_template(
+      create_area_from_template(
         ".....o\n\
          ....o.\n\
          ...o..\n\
@@ -438,7 +438,7 @@ mod tests {
     );
 
     assert_eq!(
-      GameArea::from_template(
+      create_area_from_template(
         "......\n\
          ....x.\n\
          ...x..\n\

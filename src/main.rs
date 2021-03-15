@@ -2,13 +2,9 @@ mod rules;
 use rules::{GameArea, Player};
 
 fn main() {
-    let mut area = GameArea::from_template(
-        ".o.......o.\n\
-         .o.......o.\n\
-         .o.......o.\n\
-         .o.......o.\n\
-         .o.......o.",
-    );
+    let mut area = GameArea::default();
+    // Add one play by Naught
+    area.mark(Player::Naught, 0, 0);
     // Mark a diagonal line in the middle of the game field
     for x in 3..8 {
         let y = x - 3;
