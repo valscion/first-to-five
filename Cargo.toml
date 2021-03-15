@@ -10,4 +10,4 @@ edition = "2018"
 
 [dev-dependencies]
 colored-diff = "0.2.2"
-quickcheck = "1"
+proptest = "1.0.0"
