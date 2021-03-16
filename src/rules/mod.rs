@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fmt;
 
 #[derive(fmt::Debug, PartialEq, Clone, Copy)]
@@ -13,11 +13,41 @@ pub struct GameArea {
   top: i128,
   right: i128,
   bottom: i128,
-  /// The values selected stored in a HashMap where the keys
-  /// are specifically formatted with (x,y) tuples.
-  /// For example: { (100,50) => Player::Naught } would mean that
-  /// at location x:100 y=50, the Naught player had put a selection.
-  games: HashMap<(i128, i128), Player>,
+  games: PlayedGames,
+}
+
+type Play = (Player, (i128, i128));
+
+/// The values selected stored in a two-layered binary tree map
+/// where the first layer has keys by X-coordinate and values are
+/// binary tree maps where keys are by Y-coordinate and value contains the player.
+///
+/// For example: BTreeMap(100 => BTreeMap(50 => Player::Naught)) would mean that
+/// at location x:100 y=50, the Naught player had put a selection.
+#[derive(Default)]
+struct PlayedGames(BTreeMap<i128, BTreeMap<i128, Play>>);
+
+impl<'a> PlayedGames {
+  pub fn mark(&mut self, player: Player, (x, y): (i128, i128)) {
+    let entry = self.0.entry(x).or_insert(BTreeMap::new());
+    entry.insert(y, (player, (x, y)));
+  }
+
+  pub fn range(
+    &self,
+    (start_x, start_y): (i128, i128),
+    (end_x, end_y): (i128, i128),
+  ) -> impl std::iter::Iterator<Item = Play> + '_ {
+    let possible_y_entries = self.0.range(start_x..end_x);
+    possible_y_entries
+      .filter_map(move |(_, y_map)| Some(y_map.range(start_y..end_y)))
+      .flat_map(move |y_map_range| y_map_range.map(|(&_, &play)| play).collect::<Vec<Play>>())
+  }
+
+  pub fn get(&self, (x, y): &(i128, i128)) -> Option<&Play> {
+    let y_range = self.0.get(x)?;
+    y_range.get(y)
+  }
 }
 
 impl GameArea {
@@ -46,59 +76,64 @@ impl GameArea {
       }
     }
 
-    self.games.insert((x, y), player);
+    self.games.mark(player, (x, y));
   }
 
   pub fn winner(&self) -> Option<Player> {
-    for y in self.top..self.bottom {
-      for x in self.left..self.right {
-        if let Some(&first) = self.games.get(&(x, y)) {
-          let horizontal_next_cells = [
-            self.games.get(&(x + 1, y)),
-            self.games.get(&(x + 2, y)),
-            self.games.get(&(x + 3, y)),
-            self.games.get(&(x + 4, y)),
-          ];
-          if horizontal_next_cells
-            .iter()
-            .all(|&item| item == Some(&first))
-          {
-            return Some(first);
-          }
+    for (first, (x, y)) in self
+      .games
+      .range((self.left, self.top), (self.right, self.bottom))
+    {
+      let horizontal_next_cells = [
+        self.games.get(&(x + 1, y)),
+        self.games.get(&(x + 2, y)),
+        self.games.get(&(x + 3, y)),
+        self.games.get(&(x + 4, y)),
+      ];
+      if horizontal_next_cells
+        .iter()
+        .all(|&item| item.map(|&play| play.0) == Some(first))
+      {
+        return Some(first);
+      }
 
-          let vertical_next_cells = [
-            self.games.get(&(x, y + 1)),
-            self.games.get(&(x, y + 2)),
-            self.games.get(&(x, y + 3)),
-            self.games.get(&(x, y + 4)),
-          ];
-          if vertical_next_cells.iter().all(|&item| item == Some(&first)) {
-            return Some(first);
-          }
+      let vertical_next_cells = [
+        self.games.get(&(x, y + 1)),
+        self.games.get(&(x, y + 2)),
+        self.games.get(&(x, y + 3)),
+        self.games.get(&(x, y + 4)),
+      ];
+      if vertical_next_cells
+        .iter()
+        .all(|&item| item.map(|&play| play.0) == Some(first))
+      {
+        return Some(first);
+      }
 
-          let diagonally_down_from_left_to_right_next_cells = [
-            self.games.get(&(x + 1, y + 1)),
-            self.games.get(&(x + 2, y + 2)),
-            self.games.get(&(x + 3, y + 3)),
-            self.games.get(&(x + 4, y + 4)),
-          ];
-          if diagonally_down_from_left_to_right_next_cells
-            .iter()
-            .all(|&item| item == Some(&first))
-          {
-            return Some(first);
-          }
+      let diagonally_down_from_left_to_right_next_cells = [
+        self.games.get(&(x + 1, y + 1)),
+        self.games.get(&(x + 2, y + 2)),
+        self.games.get(&(x + 3, y + 3)),
+        self.games.get(&(x + 4, y + 4)),
+      ];
+      if diagonally_down_from_left_to_right_next_cells
+        .iter()
+        .all(|&item| item.map(|&play| play.0) == Some(first))
+      {
+        return Some(first);
+      }
 
-          let next_cells = [
-            self.games.get(&(x - 1, y + 1)),
-            self.games.get(&(x - 2, y + 2)),
-            self.games.get(&(x - 3, y + 3)),
-            self.games.get(&(x - 4, y + 4)),
-          ];
-          if next_cells.iter().all(|&item| item == Some(&first)) {
-            return Some(first);
-          }
-        }
+      let next_cells = [
+        self.games.get(&(x - 1, y + 1)),
+        self.games.get(&(x - 2, y + 2)),
+        self.games.get(&(x - 3, y + 3)),
+        self.games.get(&(x - 4, y + 4)),
+      ];
+      if next_cells
+        .iter()
+        .all(|&item| item.map(|&play| play.0) == Some(first))
+      {
+        return Some(first);
       }
     }
     None
@@ -117,8 +152,8 @@ impl fmt::Display for GameArea {
       for x in self.left..self.right {
         let key = (x, y);
         match self.games.get(&key) {
-          Some(Player::Cross) => write!(f, "x")?,
-          Some(Player::Naught) => write!(f, "o")?,
+          Some((Player::Cross, _)) => write!(f, "x")?,
+          Some((Player::Naught, _)) => write!(f, "o")?,
           None => write!(f, " ")?,
         }
       }
