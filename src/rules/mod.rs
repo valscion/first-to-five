@@ -13,6 +13,7 @@ pub struct GameArea {
   top: i128,
   right: i128,
   bottom: i128,
+  winner: Option<Player>,
   games: PlayedGames,
 }
 
@@ -33,6 +34,7 @@ impl<'a> PlayedGames {
     entry.insert(y, (player, (x, y)));
   }
 
+  #[allow(unused)]
   pub fn range(
     &self,
     (start_x, start_y): (i128, i128),
@@ -46,7 +48,8 @@ impl<'a> PlayedGames {
 
   pub fn get(&self, (x, y): &(i128, i128)) -> Option<&Play> {
     let y_range = self.0.get(x)?;
-    y_range.get(y)
+    let play = y_range.get(y);
+    play
   }
 }
 
@@ -77,66 +80,74 @@ impl GameArea {
     }
 
     self.games.mark(player, (x, y));
+    self.games.get(&(x, y));
+
+    // Then calculate if the marked play resulted in a win.
+    // TODO: Calculate longest consecutive line of same player marks and
+    //       test that the longest line is at least five.
+    //       That's the algorithm we need here.
+    //
+    // Also TODO: Fix the tests so that they won't pass with this simple logic
+    //            that happens to pass due to the way area is constructed from template string.
+    let horizontal_next_cells = [
+      self.games.get(&(x - 1, y)),
+      self.games.get(&(x - 2, y)),
+      self.games.get(&(x - 3, y)),
+      self.games.get(&(x - 4, y)),
+    ];
+    if horizontal_next_cells
+      .iter()
+      .all(|&item| item.map(|&play| play.0) == Some(player))
+    {
+      self.winner = Some(player);
+      return;
+    }
+
+    let vertical_next_cells = [
+      self.games.get(&(x, y - 1)),
+      self.games.get(&(x, y - 2)),
+      self.games.get(&(x, y - 3)),
+      self.games.get(&(x, y - 4)),
+    ];
+    if vertical_next_cells
+      .iter()
+      .all(|&item| item.map(|&play| play.0) == Some(player))
+    {
+      self.winner = Some(player);
+      return;
+    }
+
+    let diagonally_down_from_left_to_right_next_cells = [
+      self.games.get(&(x - 1, y - 1)),
+      self.games.get(&(x - 2, y - 2)),
+      self.games.get(&(x - 3, y - 3)),
+      self.games.get(&(x - 4, y - 4)),
+    ];
+    if diagonally_down_from_left_to_right_next_cells
+      .iter()
+      .all(|&item| item.map(|&play| play.0) == Some(player))
+    {
+      self.winner = Some(player);
+      return;
+    }
+
+    let next_cells = [
+      self.games.get(&(x + 1, y - 1)),
+      self.games.get(&(x + 2, y - 2)),
+      self.games.get(&(x + 3, y - 3)),
+      self.games.get(&(x + 4, y - 4)),
+    ];
+    if next_cells
+      .iter()
+      .all(|&item| item.map(|&play| play.0) == Some(player))
+    {
+      self.winner = Some(player);
+      return;
+    }
   }
 
   pub fn winner(&self) -> Option<Player> {
-    for (first, (x, y)) in self
-      .games
-      .range((self.left, self.top), (self.right, self.bottom))
-    {
-      let horizontal_next_cells = [
-        self.games.get(&(x + 1, y)),
-        self.games.get(&(x + 2, y)),
-        self.games.get(&(x + 3, y)),
-        self.games.get(&(x + 4, y)),
-      ];
-      if horizontal_next_cells
-        .iter()
-        .all(|&item| item.map(|&play| play.0) == Some(first))
-      {
-        return Some(first);
-      }
-
-      let vertical_next_cells = [
-        self.games.get(&(x, y + 1)),
-        self.games.get(&(x, y + 2)),
-        self.games.get(&(x, y + 3)),
-        self.games.get(&(x, y + 4)),
-      ];
-      if vertical_next_cells
-        .iter()
-        .all(|&item| item.map(|&play| play.0) == Some(first))
-      {
-        return Some(first);
-      }
-
-      let diagonally_down_from_left_to_right_next_cells = [
-        self.games.get(&(x + 1, y + 1)),
-        self.games.get(&(x + 2, y + 2)),
-        self.games.get(&(x + 3, y + 3)),
-        self.games.get(&(x + 4, y + 4)),
-      ];
-      if diagonally_down_from_left_to_right_next_cells
-        .iter()
-        .all(|&item| item.map(|&play| play.0) == Some(first))
-      {
-        return Some(first);
-      }
-
-      let next_cells = [
-        self.games.get(&(x - 1, y + 1)),
-        self.games.get(&(x - 2, y + 2)),
-        self.games.get(&(x - 3, y + 3)),
-        self.games.get(&(x - 4, y + 4)),
-      ];
-      if next_cells
-        .iter()
-        .all(|&item| item.map(|&play| play.0) == Some(first))
-      {
-        return Some(first);
-      }
-    }
-    None
+    self.winner
   }
 }
 
