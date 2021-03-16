@@ -14,10 +14,10 @@ pub struct GameArea {
   right: i128,
   bottom: i128,
   /// The values selected stored in a HashMap where the keys
-  /// are specifically formatted with "X,Y" formatted strings.
-  /// For example: { "100,50" => Player::Naught } would mean that
+  /// are specifically formatted with (x,y) tuples.
+  /// For example: { (100,50) => Player::Naught } would mean that
   /// at location x:100 y=50, the Naught player had put a selection.
-  games: HashMap<String, Player>,
+  games: HashMap<(i128, i128), Player>,
 }
 
 impl GameArea {
@@ -46,19 +46,18 @@ impl GameArea {
       }
     }
 
-    let key = format!("{},{}", x, y);
-    self.games.insert(key, player);
+    self.games.insert((x, y), player);
   }
 
   pub fn winner(&self) -> Option<Player> {
     for y in self.top..self.bottom {
       for x in self.left..self.right {
-        if let Some(&first) = self.games.get(&format!("{},{}", x, y)) {
+        if let Some(&first) = self.games.get(&(x, y)) {
           let horizontal_next_cells = [
-            self.games.get(&format!("{},{}", x + 1, y)),
-            self.games.get(&format!("{},{}", x + 2, y)),
-            self.games.get(&format!("{},{}", x + 3, y)),
-            self.games.get(&format!("{},{}", x + 4, y)),
+            self.games.get(&(x + 1, y)),
+            self.games.get(&(x + 2, y)),
+            self.games.get(&(x + 3, y)),
+            self.games.get(&(x + 4, y)),
           ];
           if horizontal_next_cells
             .iter()
@@ -68,20 +67,20 @@ impl GameArea {
           }
 
           let vertical_next_cells = [
-            self.games.get(&format!("{},{}", x, y + 1)),
-            self.games.get(&format!("{},{}", x, y + 2)),
-            self.games.get(&format!("{},{}", x, y + 3)),
-            self.games.get(&format!("{},{}", x, y + 4)),
+            self.games.get(&(x, y + 1)),
+            self.games.get(&(x, y + 2)),
+            self.games.get(&(x, y + 3)),
+            self.games.get(&(x, y + 4)),
           ];
           if vertical_next_cells.iter().all(|&item| item == Some(&first)) {
             return Some(first);
           }
 
           let diagonally_down_from_left_to_right_next_cells = [
-            self.games.get(&format!("{},{}", x + 1, y + 1)),
-            self.games.get(&format!("{},{}", x + 2, y + 2)),
-            self.games.get(&format!("{},{}", x + 3, y + 3)),
-            self.games.get(&format!("{},{}", x + 4, y + 4)),
+            self.games.get(&(x + 1, y + 1)),
+            self.games.get(&(x + 2, y + 2)),
+            self.games.get(&(x + 3, y + 3)),
+            self.games.get(&(x + 4, y + 4)),
           ];
           if diagonally_down_from_left_to_right_next_cells
             .iter()
@@ -91,10 +90,10 @@ impl GameArea {
           }
 
           let next_cells = [
-            self.games.get(&format!("{},{}", x - 1, y + 1)),
-            self.games.get(&format!("{},{}", x - 2, y + 2)),
-            self.games.get(&format!("{},{}", x - 3, y + 3)),
-            self.games.get(&format!("{},{}", x - 4, y + 4)),
+            self.games.get(&(x - 1, y + 1)),
+            self.games.get(&(x - 2, y + 2)),
+            self.games.get(&(x - 3, y + 3)),
+            self.games.get(&(x - 4, y + 4)),
           ];
           if next_cells.iter().all(|&item| item == Some(&first)) {
             return Some(first);
@@ -116,7 +115,7 @@ impl fmt::Display for GameArea {
     for y in self.top..self.bottom {
       write!(f, "|")?;
       for x in self.left..self.right {
-        let key = format!("{},{}", x, y);
+        let key = (x, y);
         match self.games.get(&key) {
           Some(Player::Cross) => write!(f, "x")?,
           Some(Player::Naught) => write!(f, "o")?,
