@@ -182,6 +182,7 @@ impl fmt::Display for GameArea {
 mod tests {
   use super::*;
   use proptest::prelude::*;
+  use rand::seq::SliceRandom;
 
   /// Creates a new GameArea from a static template string
   ///
@@ -197,12 +198,17 @@ mod tests {
   ///    .x..",
   /// );
   /// ```
-  fn create_area_from_template(template: &'static str) -> GameArea {
+  fn create_area_from_template(
+    rng: &mut rand::rngs::ThreadRng,
+    template: &'static str,
+  ) -> GameArea {
     let lines: Vec<&str> = template.split("\n").collect();
     let height = lines.len() as i128;
     let width = lines[0].len() as i128;
     let mut area = GameArea::default();
-    for (row, line) in lines.iter().enumerate() {
+    let mut shuffled_lines = lines.iter().enumerate().collect::<Vec<(usize, &&str)>>();
+    shuffled_lines.shuffle(rng);
+    for (row, &line) in shuffled_lines.iter() {
       let row_width = line.chars().count();
       assert_eq!(
         row_width,
@@ -212,11 +218,13 @@ mod tests {
         wrong_width = row_width,
         expected_width = width
       );
-      for (column, character) in line.chars().enumerate() {
+      let mut shuffled_chars = line.chars().enumerate().collect::<Vec<(usize, char)>>();
+      shuffled_chars.shuffle(rng);
+      for (column, character) in shuffled_chars {
         match character {
           '.' => { /* blank, do nothing */ }
-          'x' => area.mark(Player::Cross, column as i128, row as i128),
-          'o' => area.mark(Player::Naught, column as i128, row as i128),
+          'x' => area.mark(Player::Cross, column as i128, *row as i128),
+          'o' => area.mark(Player::Naught, column as i128, *row as i128),
           _ => panic!("Invalid template character: '{}'", character),
         }
       }
@@ -355,7 +363,9 @@ mod tests {
 
   #[test]
   fn test_area_from_template() {
+    let mut rng = rand::thread_rng();
     let area = create_area_from_template(
+      &mut rng,
       ".x..\n\
        ....\n\
        ..o.\n\
@@ -376,7 +386,9 @@ mod tests {
 
   #[test]
   fn test_no_winner() {
+    let mut rng = rand::thread_rng();
     let area = create_area_from_template(
+      &mut rng,
       ".x..oo\n\
        .x..o.\n\
        .oooo.\n\
@@ -388,8 +400,10 @@ mod tests {
 
   #[test]
   fn test_winner_horizontal() {
+    let mut rng = rand::thread_rng();
     assert_eq!(
       create_area_from_template(
+        &mut rng,
         "x.....\n\
          ......\n\
          .ooooo\n\
@@ -403,6 +417,7 @@ mod tests {
 
     assert_eq!(
       create_area_from_template(
+        &mut rng,
         "o.....\n\
          ......\n\
          .xxxxx\n\
@@ -417,8 +432,10 @@ mod tests {
 
   #[test]
   fn test_winner_vertical() {
+    let mut rng = rand::thread_rng();
     assert_eq!(
       create_area_from_template(
+        &mut rng,
         "x..o..\n\
          ...o..\n\
          ...o..\n\
@@ -433,6 +450,7 @@ mod tests {
 
     assert_eq!(
       create_area_from_template(
+        &mut rng,
         "o.....\n\
          ...x..\n\
          ...x..\n\
@@ -448,8 +466,10 @@ mod tests {
 
   #[test]
   fn test_winner_diagonally_down_from_left_to_right() {
+    let mut rng = rand::thread_rng();
     assert_eq!(
       create_area_from_template(
+        &mut rng,
         "o....x\n\
          .o....\n\
          ..o...\n\
@@ -464,6 +484,7 @@ mod tests {
 
     assert_eq!(
       create_area_from_template(
+        &mut rng,
         ".....o\n\
          .x....\n\
          ..x...\n\
@@ -479,8 +500,10 @@ mod tests {
 
   #[test]
   fn test_winner_diagonally_down_from_right_to_left() {
+    let mut rng = rand::thread_rng();
     assert_eq!(
       create_area_from_template(
+        &mut rng,
         "x....o\n\
          ....o.\n\
          ...o..\n\
@@ -495,6 +518,7 @@ mod tests {
 
     assert_eq!(
       create_area_from_template(
+        &mut rng,
         "o.....\n\
          ....x.\n\
          ...x..\n\
