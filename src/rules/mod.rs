@@ -60,6 +60,7 @@ impl<'a> PlayedGames {
     // Generate all possible horizontal plays with length of five
     for i in 0..5 {
       possible_lines_of_five.push(vec![
+        // x grows, y stays the same
         (x - i + 0, y),
         (x - i + 1, y),
         (x - i + 2, y),
@@ -70,6 +71,7 @@ impl<'a> PlayedGames {
     // Generate all possible vertical plays with length of five
     for i in 0..5 {
       possible_lines_of_five.push(vec![
+        // x stays the same, y grows
         (x, y - i + 0),
         (x, y - i + 1),
         (x, y - i + 2),
@@ -80,6 +82,7 @@ impl<'a> PlayedGames {
     // Generate all possible diagonal plays from top left to bottom right with length of five
     for i in 0..5 {
       possible_lines_of_five.push(vec![
+        // both x and y grow --> we're going from top left to bottom right
         (x - i + 0, y - i + 0),
         (x - i + 1, y - i + 1),
         (x - i + 2, y - i + 2),
@@ -90,6 +93,7 @@ impl<'a> PlayedGames {
     // Generate all possible diagonal plays from top right to bottom left with length of five
     for i in 0..5 {
       possible_lines_of_five.push(vec![
+        // x shrinks, y grows --> we're going from top right to bottom left
         (x + i, y - i),
         (x - 1 + i, y + 1 - i),
         (x - 2 + i, y + 2 - i),
