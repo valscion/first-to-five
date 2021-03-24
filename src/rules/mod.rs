@@ -51,6 +51,73 @@ impl<'a> PlayedGames {
     let play = y_range.get(y);
     play
   }
+
+  pub fn consecutive_line_of_five(&self, point: &(i128, i128)) -> Option<Vec<&Play>> {
+    let play = self.get(point)?;
+    let (x, y) = play.1;
+    let mut possible_lines_of_five = vec![];
+
+    // Generate all possible horizontal plays with length of five
+    for i in 0..5 {
+      possible_lines_of_five.push(vec![
+        (x - i + 0, y),
+        (x - i + 1, y),
+        (x - i + 2, y),
+        (x - i + 3, y),
+        (x - i + 4, y),
+      ])
+    }
+    // Generate all possible vertical plays with length of five
+    for i in 0..5 {
+      possible_lines_of_five.push(vec![
+        (x, y - i + 0),
+        (x, y - i + 1),
+        (x, y - i + 2),
+        (x, y - i + 3),
+        (x, y - i + 4),
+      ])
+    }
+    // Generate all possible diagonal plays from top left to bottom right with length of five
+    for i in 0..5 {
+      possible_lines_of_five.push(vec![
+        (x - i + 0, y - i + 0),
+        (x - i + 1, y - i + 1),
+        (x - i + 2, y - i + 2),
+        (x - i + 3, y - i + 3),
+        (x - i + 4, y - i + 4),
+      ])
+    }
+    // Generate all possible diagonal plays from top right to bottom left with length of five
+    for i in 0..5 {
+      possible_lines_of_five.push(vec![
+        (x + i, y - i),
+        (x - 1 + i, y + 1 - i),
+        (x - 2 + i, y + 2 - i),
+        (x - 3 + i, y + 3 - i),
+        (x - 4 + i, y + 4 - i),
+      ])
+    }
+
+    // Go through all the possible lines of five we have generated
+    for points in possible_lines_of_five {
+      // Get all the plays that have been played to a vector
+      let points_to_plays: Vec<&Play> = points.iter().filter_map(|point| self.get(point)).collect();
+      // If there were any blank spots, the line wasn't consecutive.
+      if points_to_plays.len() != points.len() {
+        continue;
+      }
+      // If we get here, there wasn't any blank spots in the line.
+      // Now all we need to check is that all plays are the same as the given play.
+      if points_to_plays
+        .iter()
+        .all(|line_play| line_play.0 == play.0)
+      {
+        // We found our line!
+        return Some(points_to_plays);
+      }
+    }
+    None
+  }
 }
 
 impl GameArea {
@@ -80,69 +147,10 @@ impl GameArea {
     }
 
     self.games.mark(player, (x, y));
-    self.games.get(&(x, y));
 
     // Then calculate if the marked play resulted in a win.
-    // TODO: Calculate longest consecutive line of same player marks and
-    //       test that the longest line is at least five.
-    //       That's the algorithm we need here.
-    //
-    // Also TODO: Fix the tests so that they won't pass with this simple logic
-    //            that happens to pass due to the way area is constructed from template string.
-    let horizontal_next_cells = [
-      self.games.get(&(x - 1, y)),
-      self.games.get(&(x - 2, y)),
-      self.games.get(&(x - 3, y)),
-      self.games.get(&(x - 4, y)),
-    ];
-    if horizontal_next_cells
-      .iter()
-      .all(|&item| item.map(|&play| play.0) == Some(player))
-    {
+    if self.games.consecutive_line_of_five(&(x, y)).is_some() {
       self.winner = Some(player);
-      return;
-    }
-
-    let vertical_next_cells = [
-      self.games.get(&(x, y - 1)),
-      self.games.get(&(x, y - 2)),
-      self.games.get(&(x, y - 3)),
-      self.games.get(&(x, y - 4)),
-    ];
-    if vertical_next_cells
-      .iter()
-      .all(|&item| item.map(|&play| play.0) == Some(player))
-    {
-      self.winner = Some(player);
-      return;
-    }
-
-    let diagonally_down_from_left_to_right_next_cells = [
-      self.games.get(&(x - 1, y - 1)),
-      self.games.get(&(x - 2, y - 2)),
-      self.games.get(&(x - 3, y - 3)),
-      self.games.get(&(x - 4, y - 4)),
-    ];
-    if diagonally_down_from_left_to_right_next_cells
-      .iter()
-      .all(|&item| item.map(|&play| play.0) == Some(player))
-    {
-      self.winner = Some(player);
-      return;
-    }
-
-    let next_cells = [
-      self.games.get(&(x + 1, y - 1)),
-      self.games.get(&(x + 2, y - 2)),
-      self.games.get(&(x + 3, y - 3)),
-      self.games.get(&(x + 4, y - 4)),
-    ];
-    if next_cells
-      .iter()
-      .all(|&item| item.map(|&play| play.0) == Some(player))
-    {
-      self.winner = Some(player);
-      return;
     }
   }
 
