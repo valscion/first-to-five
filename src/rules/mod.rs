@@ -47,12 +47,12 @@ impl<'a> PlayedGames {
     play
   }
 
-  pub fn consecutive_winning_line(&self, point: &(i128, i128)) -> Option<Vec<&Play>> {
+  pub fn longest_consecutive_line(&self, point: &(i128, i128)) -> Option<Vec<&Play>> {
     let Play { x, y, player } = self.get(point)?;
     let mut possible_lines_of_five = vec![];
 
-    // Generate all possible horizontal plays with the winning length
     for i in 0..WINNING_LENGTH {
+      // Generate all possible horizontal plays with the winning length
       possible_lines_of_five.push(vec![
         // x grows, y stays the same
         (x - i + 0, *y),
@@ -60,10 +60,8 @@ impl<'a> PlayedGames {
         (x - i + 2, *y),
         (x - i + 3, *y),
         (x - i + 4, *y),
-      ])
-    }
-    // Generate all possible vertical plays with the winning length
-    for i in 0..WINNING_LENGTH {
+      ]);
+      // Generate all possible vertical plays with the winning length
       possible_lines_of_five.push(vec![
         // x stays the same, y grows
         (*x, y - i + 0),
@@ -71,10 +69,8 @@ impl<'a> PlayedGames {
         (*x, y - i + 2),
         (*x, y - i + 3),
         (*x, y - i + 4),
-      ])
-    }
-    // Generate all possible diagonal plays from top left to bottom right with the winning length
-    for i in 0..WINNING_LENGTH {
+      ]);
+      // Generate all possible diagonal plays from top left to bottom right with the winning length
       possible_lines_of_five.push(vec![
         // both x and y grow --> we're going from top left to bottom right
         (x - i + 0, y - i + 0),
@@ -82,10 +78,8 @@ impl<'a> PlayedGames {
         (x - i + 2, y - i + 2),
         (x - i + 3, y - i + 3),
         (x - i + 4, y - i + 4),
-      ])
-    }
-    // Generate all possible diagonal plays from top right to bottom left with the winning length
-    for i in 0..WINNING_LENGTH {
+      ]);
+      // Generate all possible diagonal plays from top right to bottom left with the winning length
       possible_lines_of_five.push(vec![
         // x shrinks, y grows --> we're going from top right to bottom left
         (x + i, y - i),
@@ -93,10 +87,11 @@ impl<'a> PlayedGames {
         (x - 2 + i, y + 2 - i),
         (x - 3 + i, y + 3 - i),
         (x - 4 + i, y + 4 - i),
-      ])
+      ]);
     }
 
-    // Go through all the possible lines of five we have generated
+    let mut longest_line: Vec<&Play> = vec![];
+    // Go through all the possible lines we have generated
     for points in possible_lines_of_five {
       // Get all the plays that have been played to a vector
       let points_to_plays: Vec<&Play> = points.iter().filter_map(|point| self.get(point)).collect();
@@ -110,11 +105,13 @@ impl<'a> PlayedGames {
         .iter()
         .all(|line_play| line_play.player == *player)
       {
-        // We found our line!
-        return Some(points_to_plays);
+        // We found our line! Let's check if that's longest so far.
+        if points_to_plays.len() > longest_line.len() {
+          longest_line = points_to_plays;
+        }
       }
     }
-    None
+    Some(longest_line)
   }
 }
 
@@ -147,8 +144,10 @@ impl GameArea {
     self.games.mark(player, (x, y));
 
     // Then calculate if the marked play resulted in a win.
-    if self.games.consecutive_winning_line(&(x, y)).is_some() {
-      self.winner = Some(player);
+    if let Some(longest_consecutive_line) = self.games.longest_consecutive_line(&(x, y)) {
+      if (longest_consecutive_line.len() as i128) >= WINNING_LENGTH {
+        self.winner = Some(player);
+      }
     }
   }
 
