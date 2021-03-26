@@ -19,12 +19,6 @@ pub struct GameArea {
 
 type Play = (Player, (i128, i128));
 
-pub struct AreaResult {
-  width: u128,
-  height: u128,
-  plays: Vec<Option<Player>>,
-}
-
 /// The values selected stored in a two-layered binary tree map
 /// where the first layer has keys by X-coordinate and values are
 /// binary tree maps where keys are by Y-coordinate and value contains the player.
@@ -168,7 +162,16 @@ impl GameArea {
     self.winner
   }
 
-  pub fn full_area(&self) -> AreaResult {
+  pub fn width(&self) -> u128 {
+    (self.right - self.left).abs() as u128
+  }
+
+  #[allow(dead_code)]
+  pub fn height(&self) -> u128 {
+    (self.bottom - self.top).abs() as u128
+  }
+
+  pub fn all_plays(&self) -> Vec<Option<Player>> {
     let mut plays = vec![];
     for y in self.top..self.bottom {
       for x in self.left..self.right {
@@ -179,37 +182,36 @@ impl GameArea {
       }
     }
 
-    AreaResult {
-      width: (self.right - self.left).abs() as u128,
-      height: (self.bottom - self.top).abs() as u128,
-      plays: plays,
-    }
+    plays
   }
 }
 
 impl fmt::Display for GameArea {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    let plays = self.all_plays();
+    let width = self.width() as usize;
+
     write!(f, "⌜")?;
-    for _ in self.left..self.right {
-      write!(f, "⎺")?;
-    }
-    writeln!(f, "⌝")?;
-    for y in self.top..self.bottom {
-      write!(f, "|")?;
-      for x in self.left..self.right {
-        let key = (x, y);
-        match self.games.get(&key) {
-          Some((Player::Cross, _)) => write!(f, "x")?,
-          Some((Player::Naught, _)) => write!(f, "o")?,
-          None => write!(f, " ")?,
-        }
+    f.write_str(&"⎺".repeat(width))?;
+    write!(f, "⌝")?;
+    for (i, maybe_player) in plays.iter().enumerate() {
+      let x = i % width;
+      if x == 0 {
+        write!(f, "\n|")?;
       }
-      writeln!(f, "|")?;
+
+      match maybe_player {
+        Some(Player::Cross) => write!(f, "x")?,
+        Some(Player::Naught) => write!(f, "o")?,
+        None => write!(f, " ")?,
+      }
+
+      if x == width - 1 {
+        write!(f, "|")?;
+      }
     }
-    write!(f, "⌞")?;
-    for _ in self.left..self.right {
-      write!(f, "⎽")?;
-    }
+    write!(f, "\n⌞")?;
+    f.write_str(&"⎽".repeat(width))?;
     write!(f, "⌟")
   }
 }
@@ -301,7 +303,7 @@ mod tests {
   }
 
   #[test]
-  fn test_full_area() {
+  fn test_format_full_area() {
     let mut area = GameArea::default();
     area.mark(Player::Naught, 0, 0);
     area.mark(Player::Naught, 1, 0);
@@ -329,10 +331,11 @@ mod tests {
        | x |\n\
        ⌞⎽⎽⎽⌟",
     );
+    assert_eq!(area.width(), 3);
   }
 
   #[test]
-  fn test_get_area() {
+  fn test_all_plays() {
     let mut area = GameArea::default();
     area.mark(Player::Naught, 0, 0);
     area.mark(Player::Naught, 2, 0);
@@ -345,11 +348,8 @@ mod tests {
        | x |\n\
        ⌞⎽⎽⎽⌟",
     );
-    let full_area = area.full_area();
-    assert_eq!(full_area.width, 3);
-    assert_eq!(full_area.height, 2);
     assert_eq!(
-      full_area.plays,
+      area.all_plays(),
       vec![
         Some(Player::Naught),
         None,
@@ -371,6 +371,8 @@ mod tests {
       "⌜⌝\n\
        ⌞⌟",
     );
+    assert_eq!(area.width(), 0);
+    assert_eq!(area.height(), 0);
     // When we add our first mark, the area should get to become 1x1 sized
     // and our first mark is the origin, regardless what x,y combination we gave.
     area.mark(Player::Cross, origin_x, origin_y);
@@ -380,6 +382,8 @@ mod tests {
        |x|\n\
        ⌞⎽⌟",
     );
+    assert_eq!(area.width(), 1);
+    assert_eq!(area.height(), 1);
     // Then we push it one to the right with 1, it should grow
     area.mark(Player::Naught, origin_x + 1, origin_y);
     assert_area_formatted_to(
@@ -388,6 +392,8 @@ mod tests {
        |xo|\n\
        ⌞⎽⎽⌟",
     );
+    assert_eq!(area.width(), 2);
+    assert_eq!(area.height(), 1);
     // Then let's go more to the left of the original left side and watch the area grow
     area.mark(Player::Cross, origin_x - 3, origin_y);
     assert_area_formatted_to(
@@ -396,6 +402,8 @@ mod tests {
        |x  xo|\n\
        ⌞⎽⎽⎽⎽⎽⌟",
     );
+    assert_eq!(area.width(), 5);
+    assert_eq!(area.height(), 1);
     // And then more to the top than originally was
     area.mark(Player::Naught, origin_x, origin_y - 4);
     assert_area_formatted_to(
@@ -408,6 +416,8 @@ mod tests {
        |x  xo|\n\
        ⌞⎽⎽⎽⎽⎽⌟",
     );
+    assert_eq!(area.width(), 5);
+    assert_eq!(area.height(), 5);
     // And finally more to the bottom than there was space
     area.mark(Player::Cross, origin_x + 1, origin_y + 2);
     assert_area_formatted_to(
@@ -422,6 +432,8 @@ mod tests {
        |    x|\n\
        ⌞⎽⎽⎽⎽⎽⌟",
     );
+    assert_eq!(area.width(), 5);
+    assert_eq!(area.height(), 7);
   }
   }
 
