@@ -3,6 +3,10 @@ use rules::{GameArea, Player};
 
 const FIRST_TO_PLAY: rules::Player = Player::Cross;
 
+extern crate piston_window;
+
+use piston_window::*;
+
 fn main() {
     let mut area = GameArea::default();
     let naught_plays = [(0i128, 0i128), (1, 0), (4, 0), (3, 0), (2, 0)]
@@ -34,6 +38,22 @@ fn main() {
             break;
         }
         println!();
+    }
+
+    let mut window: PistonWindow = WindowSettings::new("Hello Piston!", [640, 480])
+        .exit_on_esc(true)
+        .build()
+        .unwrap();
+    while let Some(event) = window.next() {
+        window.draw_2d(&event, |context, graphics, _device| {
+            clear([1.0; 4], graphics);
+            rectangle(
+                [1.0, 0.0, 0.0, 1.0], // red
+                [0.0, 0.0, 100.0, 100.0],
+                context.transform,
+                graphics,
+            );
+        });
     }
 
     println!("\n\nGame has ended!");
