@@ -32,6 +32,9 @@ struct Play {
 #[derive(Default)]
 struct PlayedGames(BTreeMap<i128, BTreeMap<i128, Play>>);
 
+/// The length of a line that one needs to win the game
+const WINNING_LENGTH: i128 = 5;
+
 impl<'a> PlayedGames {
   pub fn mark(&mut self, player: Player, (x, y): (i128, i128)) {
     let entry = self.0.entry(x).or_insert(BTreeMap::new());
@@ -44,12 +47,12 @@ impl<'a> PlayedGames {
     play
   }
 
-  pub fn consecutive_line_of_five(&self, point: &(i128, i128)) -> Option<Vec<&Play>> {
+  pub fn consecutive_winning_line(&self, point: &(i128, i128)) -> Option<Vec<&Play>> {
     let Play { x, y, player } = self.get(point)?;
     let mut possible_lines_of_five = vec![];
 
-    // Generate all possible horizontal plays with length of five
-    for i in 0..5 {
+    // Generate all possible horizontal plays with the winning length
+    for i in 0..WINNING_LENGTH {
       possible_lines_of_five.push(vec![
         // x grows, y stays the same
         (x - i + 0, *y),
@@ -59,8 +62,8 @@ impl<'a> PlayedGames {
         (x - i + 4, *y),
       ])
     }
-    // Generate all possible vertical plays with length of five
-    for i in 0..5 {
+    // Generate all possible vertical plays with the winning length
+    for i in 0..WINNING_LENGTH {
       possible_lines_of_five.push(vec![
         // x stays the same, y grows
         (*x, y - i + 0),
@@ -70,8 +73,8 @@ impl<'a> PlayedGames {
         (*x, y - i + 4),
       ])
     }
-    // Generate all possible diagonal plays from top left to bottom right with length of five
-    for i in 0..5 {
+    // Generate all possible diagonal plays from top left to bottom right with the winning length
+    for i in 0..WINNING_LENGTH {
       possible_lines_of_five.push(vec![
         // both x and y grow --> we're going from top left to bottom right
         (x - i + 0, y - i + 0),
@@ -81,8 +84,8 @@ impl<'a> PlayedGames {
         (x - i + 4, y - i + 4),
       ])
     }
-    // Generate all possible diagonal plays from top right to bottom left with length of five
-    for i in 0..5 {
+    // Generate all possible diagonal plays from top right to bottom left with the winning length
+    for i in 0..WINNING_LENGTH {
       possible_lines_of_five.push(vec![
         // x shrinks, y grows --> we're going from top right to bottom left
         (x + i, y - i),
@@ -144,7 +147,7 @@ impl GameArea {
     self.games.mark(player, (x, y));
 
     // Then calculate if the marked play resulted in a win.
-    if self.games.consecutive_line_of_five(&(x, y)).is_some() {
+    if self.games.consecutive_winning_line(&(x, y)).is_some() {
       self.winner = Some(player);
     }
   }
