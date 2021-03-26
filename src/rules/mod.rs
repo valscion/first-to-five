@@ -17,7 +17,11 @@ pub struct GameArea {
   games: PlayedGames,
 }
 
-type Play = (Player, (i128, i128));
+struct Play {
+  player: Player,
+  x: i128,
+  y: i128,
+}
 
 /// The values selected stored in a two-layered binary tree map
 /// where the first layer has keys by X-coordinate and values are
@@ -31,19 +35,7 @@ struct PlayedGames(BTreeMap<i128, BTreeMap<i128, Play>>);
 impl<'a> PlayedGames {
   pub fn mark(&mut self, player: Player, (x, y): (i128, i128)) {
     let entry = self.0.entry(x).or_insert(BTreeMap::new());
-    entry.insert(y, (player, (x, y)));
-  }
-
-  #[allow(unused)]
-  pub fn range(
-    &self,
-    (start_x, start_y): (i128, i128),
-    (end_x, end_y): (i128, i128),
-  ) -> impl std::iter::Iterator<Item = Play> + '_ {
-    let possible_y_entries = self.0.range(start_x..end_x);
-    possible_y_entries
-      .filter_map(move |(_, y_map)| Some(y_map.range(start_y..end_y)))
-      .flat_map(move |y_map_range| y_map_range.map(|(&_, &play)| play).collect::<Vec<Play>>())
+    entry.insert(y, Play { player, x, y });
   }
 
   pub fn get(&self, (x, y): &(i128, i128)) -> Option<&Play> {
@@ -53,30 +45,29 @@ impl<'a> PlayedGames {
   }
 
   pub fn consecutive_line_of_five(&self, point: &(i128, i128)) -> Option<Vec<&Play>> {
-    let play = self.get(point)?;
-    let (x, y) = play.1;
+    let Play { x, y, player } = self.get(point)?;
     let mut possible_lines_of_five = vec![];
 
     // Generate all possible horizontal plays with length of five
     for i in 0..5 {
       possible_lines_of_five.push(vec![
         // x grows, y stays the same
-        (x - i + 0, y),
-        (x - i + 1, y),
-        (x - i + 2, y),
-        (x - i + 3, y),
-        (x - i + 4, y),
+        (x - i + 0, *y),
+        (x - i + 1, *y),
+        (x - i + 2, *y),
+        (x - i + 3, *y),
+        (x - i + 4, *y),
       ])
     }
     // Generate all possible vertical plays with length of five
     for i in 0..5 {
       possible_lines_of_five.push(vec![
         // x stays the same, y grows
-        (x, y - i + 0),
-        (x, y - i + 1),
-        (x, y - i + 2),
-        (x, y - i + 3),
-        (x, y - i + 4),
+        (*x, y - i + 0),
+        (*x, y - i + 1),
+        (*x, y - i + 2),
+        (*x, y - i + 3),
+        (*x, y - i + 4),
       ])
     }
     // Generate all possible diagonal plays from top left to bottom right with length of five
@@ -114,7 +105,7 @@ impl<'a> PlayedGames {
       // Now all we need to check is that all plays are the same as the given play.
       if points_to_plays
         .iter()
-        .all(|line_play| line_play.0 == play.0)
+        .all(|line_play| line_play.player == *player)
       {
         // We found our line!
         return Some(points_to_plays);
@@ -177,7 +168,7 @@ impl GameArea {
       for x in self.left..self.right {
         match self.games.get(&(x, y)) {
           None => plays.push(None),
-          Some(play) => plays.push(Some(play.0)),
+          Some(play) => plays.push(Some(play.player)),
         }
       }
     }
