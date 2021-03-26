@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::fmt;
 
-#[derive(fmt::Debug, PartialEq, Clone, Copy)]
+#[derive(fmt::Debug, PartialEq, PartialOrd, Clone, Copy)]
 pub enum Player {
   Naught,
   Cross,
@@ -17,10 +17,11 @@ pub struct GameArea {
   games: PlayedGames,
 }
 
-struct Play {
-  player: Player,
+#[derive(fmt::Debug, PartialEq, PartialOrd)]
+pub struct Play {
   x: i128,
   y: i128,
+  player: Player,
 }
 
 /// The values selected stored in a two-layered binary tree map
@@ -149,6 +150,10 @@ impl GameArea {
         self.winner = Some(player);
       }
     }
+  }
+
+  pub fn longest_consecutive_line(&self, x: i128, y: i128) -> Option<Vec<&Play>> {
+    self.games.longest_consecutive_line(&(x, y))
   }
 
   pub fn winner(&self) -> Option<Player> {
@@ -583,5 +588,35 @@ mod tests {
       .unwrap(),
       Player::Cross
     );
+  }
+
+  #[test]
+  fn test_longest_consecutive_line_horizontal() {
+    let mut area = GameArea::default();
+    let player = Player::Cross;
+    area.mark(player, 1, 0);
+    area.mark(player, 2, 0);
+    area.mark(player, 3, 0);
+    area.mark(player, 4, 0);
+    area.mark(player, 0, 0);
+
+    assert_line(
+      area.longest_consecutive_line(1, 0).expect("line expected"),
+      vec![
+        &Play { player, x: 0, y: 0 },
+        &Play { player, x: 1, y: 0 },
+        &Play { player, x: 2, y: 0 },
+        &Play { player, x: 3, y: 0 },
+        &Play { player, x: 4, y: 0 },
+      ],
+    );
+  }
+
+  fn assert_line(actual_line: Vec<&Play>, expected_line: Vec<&Play>) {
+    let mut expected_line = expected_line.clone();
+    let mut actual_line = actual_line.clone();
+    expected_line.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
+    actual_line.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
+    assert_eq!(actual_line, expected_line);
   }
 }
