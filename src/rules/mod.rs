@@ -19,6 +19,12 @@ pub struct GameArea {
 
 type Play = (Player, (i128, i128));
 
+pub struct AreaResult {
+  width: u128,
+  height: u128,
+  plays: Vec<Option<Player>>,
+}
+
 /// The values selected stored in a two-layered binary tree map
 /// where the first layer has keys by X-coordinate and values are
 /// binary tree maps where keys are by Y-coordinate and value contains the player.
@@ -160,6 +166,24 @@ impl GameArea {
 
   pub fn winner(&self) -> Option<Player> {
     self.winner
+  }
+
+  pub fn full_area(&self) -> AreaResult {
+    let mut plays = vec![];
+    for y in self.top..self.bottom {
+      for x in self.left..self.right {
+        match self.games.get(&(x, y)) {
+          None => plays.push(None),
+          Some(play) => plays.push(Some(play.0)),
+        }
+      }
+    }
+
+    AreaResult {
+      width: (self.right - self.left).abs() as u128,
+      height: (self.bottom - self.top).abs() as u128,
+      plays: plays,
+    }
   }
 }
 
@@ -304,6 +328,36 @@ mod tests {
        |o o|\n\
        | x |\n\
        ⌞⎽⎽⎽⌟",
+    );
+  }
+
+  #[test]
+  fn test_get_area() {
+    let mut area = GameArea::default();
+    area.mark(Player::Naught, 0, 0);
+    area.mark(Player::Naught, 2, 0);
+    area.mark(Player::Cross, 1, 1);
+    // Sanity check first
+    assert_area_formatted_to(
+      &area,
+      "⌜⎺⎺⎺⌝\n\
+       |o o|\n\
+       | x |\n\
+       ⌞⎽⎽⎽⌟",
+    );
+    let full_area = area.full_area();
+    assert_eq!(full_area.width, 3);
+    assert_eq!(full_area.height, 2);
+    assert_eq!(
+      full_area.plays,
+      vec![
+        Some(Player::Naught),
+        None,
+        Some(Player::Naught),
+        None,
+        Some(Player::Cross),
+        None
+      ]
     );
   }
 
