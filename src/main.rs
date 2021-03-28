@@ -1,16 +1,20 @@
+mod app;
 mod rules;
+use app::App;
 use itertools::Itertools;
 use rand::random;
 use rules::{GameArea, Player};
 
-extern crate piston_window;
-
-use piston_window::*;
+use glutin_window::GlutinWindow as Window;
+use opengl_graphics::{GlGraphics, OpenGL};
+use piston::event_loop::{EventSettings, Events};
+use piston::input::{RenderEvent, UpdateEvent};
+use piston::window::WindowSettings;
 
 fn main() {
     let mut area = GameArea::default();
     example_play(&mut area);
-    start_gui(&area);
+    start_gui(&mut area);
 
     println!("\n\nGame has ended!");
 }
@@ -50,20 +54,28 @@ fn print_area(area: &GameArea) {
     }
 }
 
-fn start_gui(_area: &GameArea) {
-    let mut window: PistonWindow = WindowSettings::new("Hello Piston!", [640, 480])
+fn start_gui(area: &mut GameArea) {
+    // Change this to OpenGL::V2_1 if not working.
+    let opengl = OpenGL::V3_2;
+
+    // Create an Glutin window.
+    let mut window: Window = WindowSettings::new("first-to-five", [200, 200])
+        .graphics_api(opengl)
         .exit_on_esc(true)
         .build()
         .unwrap();
-    while let Some(event) = window.next() {
-        window.draw_2d(&event, |context, graphics, _device| {
-            clear([1.0; 4], graphics);
-            rectangle(
-                [1.0, 0.0, 0.0, 1.0], // red
-                [0.0, 0.0, 100.0, 100.0],
-                context.transform,
-                graphics,
-            );
-        });
+
+    // Create a new game and run it.
+    let mut app = App::new(GlGraphics::new(opengl), area);
+
+    let mut events = Events::new(EventSettings::new());
+    while let Some(e) = events.next(&mut window) {
+        if let Some(args) = e.render_args() {
+            app.render(&args);
+        }
+
+        if let Some(args) = e.update_args() {
+            app.update(&args);
+        }
     }
 }
