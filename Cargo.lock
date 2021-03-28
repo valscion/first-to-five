@@ -189,7 +189,7 @@ checksum = "516f260afc909bb0d056b76891ad91b3275b83682d851b566792077eee946efd"
 dependencies = [
  "ansi_term",
  "difference",
- "itertools",
+ "itertools 0.7.11",
 ]
 
 [[package]]
@@ -440,6 +440,7 @@ name = "first-to-five"
 version = "0.1.0"
 dependencies = [
  "colored-diff",
+ "itertools 0.10.0",
  "piston_window",
  "proptest",
  "rand",
@@ -711,6 +712,15 @@ name = "itertools"
 version = "0.7.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0d47946d458e94a1b7bcabbf6521ea7c037062c81f534615abcad76e84d4970d"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "37d572918e350e82412fe766d24b15e6682fb2ed2bbe018280caa810397cb319"
 dependencies = [
  "either",
 ]
