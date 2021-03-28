@@ -56,41 +56,46 @@ impl<'a> PlayedGames {
     let max_line_width = line_width_range.len() as i128;
     for i in line_width_range {
       let i = i as i128;
-      // Generate all possible horizontal plays
       for j in 0..max_line_width {
-        let mut line_vec = vec![];
-        for k in 0..j {
-          // Horizontal plays: x grows, y stays the same
-          line_vec.push((x - i + k, *y));
+        // Generate all possible horizontal plays
+        {
+          let mut line_vec = vec![];
+          for k in 0..j {
+            // Horizontal plays: x grows, y stays the same
+            line_vec.push((x - i + k, *y));
+          }
+          possible_lines_of_five.push(line_vec);
         }
-        possible_lines_of_five.push(line_vec);
-      }
-      // Generate all possible vertical plays
-      for j in 0..max_line_width {
-        let mut line_vec = vec![];
-        for k in 0..j {
-          // Vertical plays: x stays the same, y grows
-          line_vec.push((*x, y - i + k));
+
+        // Generate all possible vertical plays
+        {
+          let mut line_vec = vec![];
+          for k in 0..j {
+            // Vertical plays: x stays the same, y grows
+            line_vec.push((*x, y - i + k));
+          }
+          possible_lines_of_five.push(line_vec);
         }
-        possible_lines_of_five.push(line_vec);
-      }
-      // Generate all possible diagonal plays from top left to bottom right
-      for j in 0..max_line_width {
-        let mut line_vec = vec![];
-        for k in 0..j {
-          // both x and y grow --> we're going from top left to bottom right
-          line_vec.push((x - i + k, y - i + k));
+
+        // Generate all possible diagonal plays from top left to bottom right
+        {
+          let mut line_vec = vec![];
+          for k in 0..j {
+            // both x and y grow --> we're going from top left to bottom right
+            line_vec.push((x - i + k, y - i + k));
+          }
+          possible_lines_of_five.push(line_vec);
         }
-        possible_lines_of_five.push(line_vec);
-      }
-      // // Generate all possible diagonal plays from top right to bottom left
-      for j in 0..max_line_width {
-        let mut line_vec = vec![];
-        for k in 0..j {
-          // x shrinks, y grows --> we're going from top right to bottom left
-          line_vec.push((x + i - k, y - i + k));
+
+        // Generate all possible diagonal plays from top right to bottom left
+        {
+          let mut line_vec = vec![];
+          for k in 0..j {
+            // x shrinks, y grows --> we're going from top right to bottom left
+            line_vec.push((x + i - k, y - i + k));
+          }
+          possible_lines_of_five.push(line_vec);
         }
-        possible_lines_of_five.push(line_vec);
       }
     }
 
