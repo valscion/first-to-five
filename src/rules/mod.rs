@@ -34,7 +34,7 @@ pub struct Play {
 struct PlayedGames(BTreeMap<i128, BTreeMap<i128, Play>>);
 
 /// The length of a line that one needs to win the game
-const WINNING_LENGTH: i128 = 5;
+const WINNING_LENGTH: i32 = 5;
 
 impl<'a> PlayedGames {
   pub fn mark(&mut self, player: Player, (x, y): (i128, i128)) {
@@ -52,43 +52,46 @@ impl<'a> PlayedGames {
     let Play { x, y, player } = self.get(point)?;
     let mut possible_lines_of_five = vec![];
 
-    for i in 0..WINNING_LENGTH {
-      // Generate all possible horizontal plays with the winning length
-      possible_lines_of_five.push(vec![
-        // x grows, y stays the same
-        (x - i + 0, *y),
-        (x - i + 1, *y),
-        (x - i + 2, *y),
-        (x - i + 3, *y),
-        (x - i + 4, *y),
-      ]);
-      // Generate all possible vertical plays with the winning length
-      possible_lines_of_five.push(vec![
-        // x stays the same, y grows
-        (*x, y - i + 0),
-        (*x, y - i + 1),
-        (*x, y - i + 2),
-        (*x, y - i + 3),
-        (*x, y - i + 4),
-      ]);
-      // Generate all possible diagonal plays from top left to bottom right with the winning length
-      possible_lines_of_five.push(vec![
-        // both x and y grow --> we're going from top left to bottom right
-        (x - i + 0, y - i + 0),
-        (x - i + 1, y - i + 1),
-        (x - i + 2, y - i + 2),
-        (x - i + 3, y - i + 3),
-        (x - i + 4, y - i + 4),
-      ]);
-      // Generate all possible diagonal plays from top right to bottom left with the winning length
-      possible_lines_of_five.push(vec![
-        // x shrinks, y grows --> we're going from top right to bottom left
-        (x + i, y - i),
-        (x - 1 + i, y + 1 - i),
-        (x - 2 + i, y + 2 - i),
-        (x - 3 + i, y + 3 - i),
-        (x - 4 + i, y + 4 - i),
-      ]);
+    let line_width_range = (-WINNING_LENGTH)..WINNING_LENGTH;
+    let max_line_width = line_width_range.len() as i128;
+    for i in line_width_range {
+      let i = i as i128;
+      // Generate all possible horizontal plays
+      for j in 0..max_line_width {
+        let mut line_vec = vec![];
+        for k in 0..j {
+          // Horizontal plays: x grows, y stays the same
+          line_vec.push((x - i + k, *y));
+        }
+        possible_lines_of_five.push(line_vec);
+      }
+      // Generate all possible vertical plays
+      for j in 0..max_line_width {
+        let mut line_vec = vec![];
+        for k in 0..j {
+          // Vertical plays: x stays the same, y grows
+          line_vec.push((*x, y - i + k));
+        }
+        possible_lines_of_five.push(line_vec);
+      }
+      // Generate all possible diagonal plays from top left to bottom right
+      for j in 0..max_line_width {
+        let mut line_vec = vec![];
+        for k in 0..j {
+          // both x and y grow --> we're going from top left to bottom right
+          line_vec.push((x - i + k, y - i + k));
+        }
+        possible_lines_of_five.push(line_vec);
+      }
+      // // Generate all possible diagonal plays from top right to bottom left
+      for j in 0..max_line_width {
+        let mut line_vec = vec![];
+        for k in 0..j {
+          // x shrinks, y grows --> we're going from top right to bottom left
+          line_vec.push((x + i - k, y - i + k));
+        }
+        possible_lines_of_five.push(line_vec);
+      }
     }
 
     let mut longest_line: Vec<&Play> = vec![];
@@ -146,7 +149,7 @@ impl GameArea {
 
     // Then calculate if the marked play resulted in a win.
     if let Some(longest_consecutive_line) = self.games.longest_consecutive_line(&(x, y)) {
-      if (longest_consecutive_line.len() as i128) >= WINNING_LENGTH {
+      if (longest_consecutive_line.len() as i128) >= (WINNING_LENGTH as i128) {
         self.winner = Some(player);
       }
     }
@@ -598,16 +601,158 @@ mod tests {
     area.mark(player, 2, 0);
     area.mark(player, 3, 0);
     area.mark(player, 4, 0);
-    area.mark(player, 0, 0);
 
     assert_line(
-      area.longest_consecutive_line(1, 0).expect("line expected"),
+      area.longest_consecutive_line(3, 0).expect("line expected"),
       vec![
-        &Play { player, x: 0, y: 0 },
         &Play { player, x: 1, y: 0 },
         &Play { player, x: 2, y: 0 },
         &Play { player, x: 3, y: 0 },
         &Play { player, x: 4, y: 0 },
+      ],
+    );
+
+    area.mark(player, 6, 0);
+    area.mark(player, 7, 0);
+    area.mark(player, 8, 0);
+    area.mark(player, 9, 0);
+    area.mark(player, 5, 0);
+
+    assert_line(
+      area.longest_consecutive_line(4, 0).expect("line expected"),
+      vec![
+        &Play { player, x: 1, y: 0 },
+        &Play { player, x: 2, y: 0 },
+        &Play { player, x: 3, y: 0 },
+        &Play { player, x: 4, y: 0 },
+        &Play { player, x: 5, y: 0 },
+        &Play { player, x: 6, y: 0 },
+        &Play { player, x: 7, y: 0 },
+        &Play { player, x: 8, y: 0 },
+        &Play { player, x: 9, y: 0 },
+      ],
+    );
+  }
+
+  #[test]
+  fn test_longest_consecutive_line_vertical() {
+    let mut area = GameArea::default();
+    let player = Player::Cross;
+    area.mark(player, 0, 1);
+    area.mark(player, 0, 2);
+    area.mark(player, 0, 3);
+    area.mark(player, 0, 4);
+
+    assert_line(
+      area.longest_consecutive_line(0, 3).expect("line expected"),
+      vec![
+        &Play { player, x: 0, y: 1 },
+        &Play { player, x: 0, y: 2 },
+        &Play { player, x: 0, y: 3 },
+        &Play { player, x: 0, y: 4 },
+      ],
+    );
+
+    area.mark(player, 0, 6);
+    area.mark(player, 0, 7);
+    area.mark(player, 0, 8);
+    area.mark(player, 0, 9);
+    area.mark(player, 0, 5);
+
+    assert_line(
+      area.longest_consecutive_line(0, 4).expect("line expected"),
+      vec![
+        &Play { player, x: 0, y: 1 },
+        &Play { player, x: 0, y: 2 },
+        &Play { player, x: 0, y: 3 },
+        &Play { player, x: 0, y: 4 },
+        &Play { player, x: 0, y: 5 },
+        &Play { player, x: 0, y: 6 },
+        &Play { player, x: 0, y: 7 },
+        &Play { player, x: 0, y: 8 },
+        &Play { player, x: 0, y: 9 },
+      ],
+    );
+  }
+
+  #[test]
+  fn test_longest_consecutive_line_diagonally_down_from_left_to_right() {
+    let mut area = GameArea::default();
+    let player = Player::Cross;
+    area.mark(player, 0, 1);
+    area.mark(player, 1, 2);
+    area.mark(player, 2, 3);
+    area.mark(player, 3, 4);
+
+    assert_line(
+      area.longest_consecutive_line(2, 3).expect("line expected"),
+      vec![
+        &Play { player, x: 0, y: 1 },
+        &Play { player, x: 1, y: 2 },
+        &Play { player, x: 2, y: 3 },
+        &Play { player, x: 3, y: 4 },
+      ],
+    );
+
+    area.mark(player, 5, 6);
+    area.mark(player, 6, 7);
+    area.mark(player, 7, 8);
+    area.mark(player, 8, 9);
+    area.mark(player, 4, 5);
+
+    assert_line(
+      area.longest_consecutive_line(3, 4).expect("line expected"),
+      vec![
+        &Play { player, x: 0, y: 1 },
+        &Play { player, x: 1, y: 2 },
+        &Play { player, x: 2, y: 3 },
+        &Play { player, x: 3, y: 4 },
+        &Play { player, x: 4, y: 5 },
+        &Play { player, x: 5, y: 6 },
+        &Play { player, x: 6, y: 7 },
+        &Play { player, x: 7, y: 8 },
+        &Play { player, x: 8, y: 9 },
+      ],
+    );
+  }
+
+  #[test]
+  fn test_longest_consecutive_line_diagonally_down_from_right_to_left() {
+    let mut area = GameArea::default();
+    let player = Player::Cross;
+    area.mark(player, 9, 1);
+    area.mark(player, 8, 2);
+    area.mark(player, 7, 3);
+    area.mark(player, 6, 4);
+
+    assert_line(
+      area.longest_consecutive_line(7, 3).expect("line expected"),
+      vec![
+        &Play { player, x: 9, y: 1 },
+        &Play { player, x: 8, y: 2 },
+        &Play { player, x: 7, y: 3 },
+        &Play { player, x: 6, y: 4 },
+      ],
+    );
+
+    area.mark(player, 4, 6);
+    area.mark(player, 3, 7);
+    area.mark(player, 2, 8);
+    area.mark(player, 1, 9);
+    area.mark(player, 5, 5);
+
+    assert_line(
+      area.longest_consecutive_line(5, 5).expect("line expected"),
+      vec![
+        &Play { player, x: 9, y: 1 },
+        &Play { player, x: 8, y: 2 },
+        &Play { player, x: 7, y: 3 },
+        &Play { player, x: 6, y: 4 },
+        &Play { player, x: 5, y: 5 },
+        &Play { player, x: 4, y: 6 },
+        &Play { player, x: 3, y: 7 },
+        &Play { player, x: 2, y: 8 },
+        &Play { player, x: 1, y: 9 },
       ],
     );
   }
