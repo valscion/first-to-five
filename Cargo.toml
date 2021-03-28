@@ -9,8 +9,8 @@ edition = "2018"
 [dependencies]
 piston_window = "*"
 itertools = "0.10.0"
+rand = "0.8"
 
 [dev-dependencies]
 colored-diff = "0.2.2"
 proptest = "1.0.0"
-rand = "0.8"
