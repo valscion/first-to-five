@@ -17,6 +17,17 @@ pub struct GameArea {
   games: PlayedGames,
 }
 
+/// Error caused by trying to mark a new play to a game which has already been
+/// completed
+#[derive(Debug, Clone)]
+pub struct WinnerAlreadySelectedError;
+impl std::error::Error for WinnerAlreadySelectedError {}
+impl fmt::Display for WinnerAlreadySelectedError {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    write!(f, "Winner already selected, can't mark new plays")
+  }
+}
+
 #[derive(fmt::Debug, PartialEq, PartialOrd)]
 pub struct Play {
   x: i128,
@@ -125,7 +136,17 @@ impl<'a> PlayedGames {
 }
 
 impl GameArea {
-  pub fn mark(&mut self, player: Player, x: i128, y: i128) {
+  pub fn mark(
+    &mut self,
+    player: Player,
+    x: i128,
+    y: i128,
+  ) -> std::result::Result<(), WinnerAlreadySelectedError> {
+    if self.winner.is_some() {
+      // There already is a winner, so we can't play.
+      return Err(WinnerAlreadySelectedError);
+    }
+
     if self.left == 0 && self.right == 0 && self.top == 0 && self.bottom == 0 {
       // We need to set the origin to be the place where the first mark comes
       self.left = x;
@@ -158,6 +179,8 @@ impl GameArea {
         self.winner = Some(player);
       }
     }
+
+    Ok(())
   }
 
   pub fn longest_consecutive_line(&self, x: i128, y: i128) -> Option<Vec<&Play>> {
@@ -265,8 +288,12 @@ mod tests {
       for (column, character) in shuffled_chars {
         match character {
           '.' => { /* blank, do nothing */ }
-          'x' => area.mark(Player::Cross, column as i128, *row as i128),
-          'o' => area.mark(Player::Naught, column as i128, *row as i128),
+          'x' => area
+            .mark(Player::Cross, column as i128, *row as i128)
+            .expect("Winner should not have already been selected"),
+          'o' => area
+            .mark(Player::Naught, column as i128, *row as i128)
+            .expect("Winner should not have already been selected"),
           _ => panic!("Invalid template character: '{}'", character),
         }
       }
@@ -309,12 +336,12 @@ mod tests {
   }
 
   #[test]
-  fn test_format_full_area() {
+  fn test_format_full_area() -> Result<(), WinnerAlreadySelectedError> {
     let mut area = GameArea::default();
-    area.mark(Player::Naught, 0, 0);
-    area.mark(Player::Naught, 1, 0);
-    area.mark(Player::Cross, 0, 1);
-    area.mark(Player::Cross, 1, 1);
+    area.mark(Player::Naught, 0, 0)?;
+    area.mark(Player::Naught, 1, 0)?;
+    area.mark(Player::Cross, 0, 1)?;
+    area.mark(Player::Cross, 1, 1)?;
     assert_area_formatted_to(
       &area,
       "⌜⎺⎺⌝\n\
@@ -322,14 +349,16 @@ mod tests {
        |xx|\n\
        ⌞⎽⎽⌟",
     );
+
+    Ok(())
   }
 
   #[test]
-  fn test_partial_area() {
+  fn test_partial_area() -> Result<(), WinnerAlreadySelectedError> {
     let mut area = GameArea::default();
-    area.mark(Player::Naught, 0, 0);
-    area.mark(Player::Naught, 2, 0);
-    area.mark(Player::Cross, 1, 1);
+    area.mark(Player::Naught, 0, 0)?;
+    area.mark(Player::Naught, 2, 0)?;
+    area.mark(Player::Cross, 1, 1)?;
     assert_area_formatted_to(
       &area,
       "⌜⎺⎺⎺⌝\n\
@@ -338,14 +367,16 @@ mod tests {
        ⌞⎽⎽⎽⌟",
     );
     assert_eq!(area.width(), 3);
+
+    Ok(())
   }
 
   #[test]
-  fn test_all_plays() {
+  fn test_all_plays() -> Result<(), WinnerAlreadySelectedError> {
     let mut area = GameArea::default();
-    area.mark(Player::Naught, 0, 0);
-    area.mark(Player::Naught, 2, 0);
-    area.mark(Player::Cross, 1, 1);
+    area.mark(Player::Naught, 0, 0)?;
+    area.mark(Player::Naught, 2, 0)?;
+    area.mark(Player::Cross, 1, 1)?;
     // Sanity check first
     assert_area_formatted_to(
       &area,
@@ -365,6 +396,8 @@ mod tests {
         None
       ]
     );
+
+    Ok(())
   }
 
   proptest! {
@@ -381,7 +414,7 @@ mod tests {
     assert_eq!(area.height(), 0);
     // When we add our first mark, the area should get to become 1x1 sized
     // and our first mark is the origin, regardless what x,y combination we gave.
-    area.mark(Player::Cross, origin_x, origin_y);
+    area.mark(Player::Cross, origin_x, origin_y).unwrap();
     assert_area_formatted_to(
       &area,
       "⌜⎺⌝\n\
@@ -391,7 +424,7 @@ mod tests {
     assert_eq!(area.width(), 1);
     assert_eq!(area.height(), 1);
     // Then we push it one to the right with 1, it should grow
-    area.mark(Player::Naught, origin_x + 1, origin_y);
+    area.mark(Player::Naught, origin_x + 1, origin_y).unwrap();
     assert_area_formatted_to(
       &area,
       "⌜⎺⎺⌝\n\
@@ -401,7 +434,7 @@ mod tests {
     assert_eq!(area.width(), 2);
     assert_eq!(area.height(), 1);
     // Then let's go more to the left of the original left side and watch the area grow
-    area.mark(Player::Cross, origin_x - 3, origin_y);
+    area.mark(Player::Cross, origin_x - 3, origin_y).unwrap();
     assert_area_formatted_to(
       &area,
       "⌜⎺⎺⎺⎺⎺⌝\n\
@@ -411,7 +444,7 @@ mod tests {
     assert_eq!(area.width(), 5);
     assert_eq!(area.height(), 1);
     // And then more to the top than originally was
-    area.mark(Player::Naught, origin_x, origin_y - 4);
+    area.mark(Player::Naught, origin_x, origin_y - 4).unwrap();
     assert_area_formatted_to(
       &area,
       "⌜⎺⎺⎺⎺⎺⌝\n\
@@ -425,7 +458,7 @@ mod tests {
     assert_eq!(area.width(), 5);
     assert_eq!(area.height(), 5);
     // And finally more to the bottom than there was space
-    area.mark(Player::Cross, origin_x + 1, origin_y + 2);
+    area.mark(Player::Cross, origin_x + 1, origin_y + 2).unwrap();
     assert_area_formatted_to(
       &area,
       "⌜⎺⎺⎺⎺⎺⌝\n\
@@ -479,28 +512,12 @@ mod tests {
   #[test]
   fn test_winner_horizontal() {
     assert_eq!(
-      create_area_from_template(
-        "x.....\n\
-         ......\n\
-         .ooooo\n\
-         ......\n\
-         .....x",
-      )
-      .winner()
-      .unwrap(),
+      create_area_from_template("ooooo",).winner().unwrap(),
       Player::Naught
     );
 
     assert_eq!(
-      create_area_from_template(
-        "o.....\n\
-         ......\n\
-         .xxxxx\n\
-         ......\n\
-         .....o",
-      )
-      .winner()
-      .unwrap(),
+      create_area_from_template("xxxxx",).winner().unwrap(),
       Player::Cross
     );
   }
@@ -509,12 +526,11 @@ mod tests {
   fn test_winner_vertical() {
     assert_eq!(
       create_area_from_template(
-        "x..o..\n\
-         ...o..\n\
-         ...o..\n\
-         ...o..\n\
-         ...o..\n\
-         .....x",
+        "o\n\
+         o\n\
+         o\n\
+         o\n\
+         o",
       )
       .winner()
       .unwrap(),
@@ -523,12 +539,11 @@ mod tests {
 
     assert_eq!(
       create_area_from_template(
-        "o.....\n\
-         ...x..\n\
-         ...x..\n\
-         ...x..\n\
-         ...x..\n\
-         ...x.o",
+        "x\n\
+         x\n\
+         x\n\
+         x\n\
+         x",
       )
       .winner()
       .unwrap(),
@@ -540,12 +555,11 @@ mod tests {
   fn test_winner_diagonally_down_from_left_to_right() {
     assert_eq!(
       create_area_from_template(
-        "o....x\n\
-         .o....\n\
-         ..o...\n\
-         ...o..\n\
-         ....o.\n\
-         x.....",
+        "o....\n\
+         .o...\n\
+         ..o..\n\
+         ...o.\n\
+         ....o",
       )
       .winner()
       .unwrap(),
@@ -554,12 +568,11 @@ mod tests {
 
     assert_eq!(
       create_area_from_template(
-        ".....o\n\
-         .x....\n\
-         ..x...\n\
-         ...x..\n\
-         ....x.\n\
-         o....x",
+        "x....\n\
+         .x...\n\
+         ..x..\n\
+         ...x.\n\
+         ....x",
       )
       .winner()
       .unwrap(),
@@ -571,12 +584,11 @@ mod tests {
   fn test_winner_diagonally_down_from_right_to_left() {
     assert_eq!(
       create_area_from_template(
-        "x....o\n\
-         ....o.\n\
-         ...o..\n\
-         ..o...\n\
-         .o....\n\
-         .....x",
+        "....o\n\
+         ...o.\n\
+         ..o..\n\
+         .o...\n\
+         o....",
       )
       .winner()
       .unwrap(),
@@ -585,12 +597,11 @@ mod tests {
 
     assert_eq!(
       create_area_from_template(
-        "o.....\n\
-         ....x.\n\
-         ...x..\n\
-         ..x...\n\
-         .x....\n\
-         x....o",
+        "....x\n\
+         ...x.\n\
+         ..x..\n\
+         .x...\n\
+         x....",
       )
       .winner()
       .unwrap(),
@@ -599,13 +610,13 @@ mod tests {
   }
 
   #[test]
-  fn test_longest_consecutive_line_horizontal() {
+  fn test_longest_consecutive_line_horizontal() -> Result<(), WinnerAlreadySelectedError> {
     let mut area = GameArea::default();
     let player = Player::Cross;
-    area.mark(player, 1, 0);
-    area.mark(player, 2, 0);
-    area.mark(player, 3, 0);
-    area.mark(player, 4, 0);
+    area.mark(player, 1, 0)?;
+    area.mark(player, 2, 0)?;
+    area.mark(player, 3, 0)?;
+    area.mark(player, 4, 0)?;
 
     assert_line(
       area.longest_consecutive_line(3, 0).expect("line expected"),
@@ -617,11 +628,11 @@ mod tests {
       ],
     );
 
-    area.mark(player, 6, 0);
-    area.mark(player, 7, 0);
-    area.mark(player, 8, 0);
-    area.mark(player, 9, 0);
-    area.mark(player, 5, 0);
+    area.mark(player, 6, 0)?;
+    area.mark(player, 7, 0)?;
+    area.mark(player, 8, 0)?;
+    area.mark(player, 9, 0)?;
+    area.mark(player, 5, 0)?;
 
     assert_line(
       area.longest_consecutive_line(4, 0).expect("line expected"),
@@ -637,16 +648,18 @@ mod tests {
         &Play { player, x: 9, y: 0 },
       ],
     );
+
+    Ok(())
   }
 
   #[test]
-  fn test_longest_consecutive_line_vertical() {
+  fn test_longest_consecutive_line_vertical() -> Result<(), WinnerAlreadySelectedError> {
     let mut area = GameArea::default();
     let player = Player::Cross;
-    area.mark(player, 0, 1);
-    area.mark(player, 0, 2);
-    area.mark(player, 0, 3);
-    area.mark(player, 0, 4);
+    area.mark(player, 0, 1)?;
+    area.mark(player, 0, 2)?;
+    area.mark(player, 0, 3)?;
+    area.mark(player, 0, 4)?;
 
     assert_line(
       area.longest_consecutive_line(0, 3).expect("line expected"),
@@ -658,11 +671,11 @@ mod tests {
       ],
     );
 
-    area.mark(player, 0, 6);
-    area.mark(player, 0, 7);
-    area.mark(player, 0, 8);
-    area.mark(player, 0, 9);
-    area.mark(player, 0, 5);
+    area.mark(player, 0, 6)?;
+    area.mark(player, 0, 7)?;
+    area.mark(player, 0, 8)?;
+    area.mark(player, 0, 9)?;
+    area.mark(player, 0, 5)?;
 
     assert_line(
       area.longest_consecutive_line(0, 4).expect("line expected"),
@@ -678,16 +691,19 @@ mod tests {
         &Play { player, x: 0, y: 9 },
       ],
     );
+
+    Ok(())
   }
 
   #[test]
-  fn test_longest_consecutive_line_diagonally_down_from_left_to_right() {
+  fn test_longest_consecutive_line_diagonally_down_from_left_to_right(
+  ) -> Result<(), WinnerAlreadySelectedError> {
     let mut area = GameArea::default();
     let player = Player::Cross;
-    area.mark(player, 0, 1);
-    area.mark(player, 1, 2);
-    area.mark(player, 2, 3);
-    area.mark(player, 3, 4);
+    area.mark(player, 0, 1)?;
+    area.mark(player, 1, 2)?;
+    area.mark(player, 2, 3)?;
+    area.mark(player, 3, 4)?;
 
     assert_line(
       area.longest_consecutive_line(2, 3).expect("line expected"),
@@ -699,11 +715,11 @@ mod tests {
       ],
     );
 
-    area.mark(player, 5, 6);
-    area.mark(player, 6, 7);
-    area.mark(player, 7, 8);
-    area.mark(player, 8, 9);
-    area.mark(player, 4, 5);
+    area.mark(player, 5, 6)?;
+    area.mark(player, 6, 7)?;
+    area.mark(player, 7, 8)?;
+    area.mark(player, 8, 9)?;
+    area.mark(player, 4, 5)?;
 
     assert_line(
       area.longest_consecutive_line(3, 4).expect("line expected"),
@@ -719,16 +735,19 @@ mod tests {
         &Play { player, x: 8, y: 9 },
       ],
     );
+
+    Ok(())
   }
 
   #[test]
-  fn test_longest_consecutive_line_diagonally_down_from_right_to_left() {
+  fn test_longest_consecutive_line_diagonally_down_from_right_to_left(
+  ) -> Result<(), WinnerAlreadySelectedError> {
     let mut area = GameArea::default();
     let player = Player::Cross;
-    area.mark(player, 9, 1);
-    area.mark(player, 8, 2);
-    area.mark(player, 7, 3);
-    area.mark(player, 6, 4);
+    area.mark(player, 9, 1)?;
+    area.mark(player, 8, 2)?;
+    area.mark(player, 7, 3)?;
+    area.mark(player, 6, 4)?;
 
     assert_line(
       area.longest_consecutive_line(7, 3).expect("line expected"),
@@ -740,11 +759,11 @@ mod tests {
       ],
     );
 
-    area.mark(player, 4, 6);
-    area.mark(player, 3, 7);
-    area.mark(player, 2, 8);
-    area.mark(player, 1, 9);
-    area.mark(player, 5, 5);
+    area.mark(player, 4, 6)?;
+    area.mark(player, 3, 7)?;
+    area.mark(player, 2, 8)?;
+    area.mark(player, 1, 9)?;
+    area.mark(player, 5, 5)?;
 
     assert_line(
       area.longest_consecutive_line(5, 5).expect("line expected"),
@@ -760,6 +779,8 @@ mod tests {
         &Play { player, x: 1, y: 9 },
       ],
     );
+
+    Ok(())
   }
 
   fn assert_line(actual_line: Vec<&Play>, expected_line: Vec<&Play>) {

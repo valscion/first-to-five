@@ -7,7 +7,7 @@ extern crate piston_window;
 
 use piston_window::*;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut area = GameArea::default();
     let naught_plays = [(0i128, 0i128), (1, 0), (4, 0), (3, 0), (2, 0)]
         .iter()
@@ -26,13 +26,13 @@ fn main() {
     for (round, ((x1, y1, player1), (x2, y2, player2))) in plays.enumerate() {
         println!("# Round {} starts!\n", round + 1);
 
-        area.mark(*player1, **x1, **y1);
+        area.mark(*player1, **x1, **y1)?;
         print_area(&area);
         if area.winner().is_some() {
             break;
         }
 
-        area.mark(*player2, **x2, **y2);
+        area.mark(*player2, **x2, **y2)?;
         print_area(&area);
         if area.winner().is_some() {
             break;
@@ -57,6 +57,7 @@ fn main() {
     }
 
     println!("\n\nGame has ended!");
+    Ok(())
 }
 
 fn print_area(area: &GameArea) {
