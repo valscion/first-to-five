@@ -273,7 +273,7 @@ mod tests {
     let mut area = GameArea::default();
     let mut shuffled_lines = lines.iter().enumerate().collect::<Vec<(usize, &&str)>>();
     shuffled_lines.shuffle(&mut rng);
-    for (row, &line) in shuffled_lines.iter() {
+    for (row, &line) in &shuffled_lines {
       let row_width = line.chars().count();
       assert_eq!(
         row_width,

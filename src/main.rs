@@ -19,9 +19,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collect::<Vec<_>>();
 
     let plays = if FIRST_TO_PLAY == Player::Naught {
-        naught_plays.iter().zip(cross_plays.iter())
+        naught_plays.iter().zip(&cross_plays)
     } else {
-        cross_plays.iter().zip(naught_plays.iter())
+        cross_plays.iter().zip(&naught_plays)
     };
     for (round, ((x1, y1, player1), (x2, y2, player2))) in plays.enumerate() {
         println!("# Round {} starts!\n", round + 1);
