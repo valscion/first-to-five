@@ -6,6 +6,16 @@ pub enum Player {
   Naught,
   Cross,
 }
+impl std::ops::Not for Player {
+  type Output = Self;
+
+  fn not(self) -> Self::Output {
+    match self {
+      Player::Naught => Player::Cross,
+      Player::Cross => Player::Naught,
+    }
+  }
+}
 
 #[derive(Default)]
 pub struct GameArea {
