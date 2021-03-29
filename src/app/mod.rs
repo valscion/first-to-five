@@ -23,6 +23,7 @@ impl<'a> App<'a> {
     use graphics::*;
 
     const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+    const GRAY: [f32; 4] = [0.5, 0.5, 0.5, 1.0];
     const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
     const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 
@@ -35,6 +36,8 @@ impl<'a> App<'a> {
     const MARGIN: f64 = 4.0;
     // The width of the lines for the plays
     const STROKE: f64 = 2.0;
+    // The grid's line stroke width
+    const GRID_STROKE: f64 = 1.0;
 
     let area_width = self.game_area.width() as usize;
     let all_plays = self.game_area.all_plays();
@@ -53,6 +56,18 @@ impl<'a> App<'a> {
         ([0.0, w_h], [0.0, 0.0]),
       ] {
         line_from_to(RED, 2.0, *from, *to, transform, gl);
+      }
+
+      // Then draw the grid.
+      let horizontal_lines_count = (w_w / play_size) as usize;
+      let vertical_lines_count = (w_h / play_size) as usize;
+      for i in 1..(vertical_lines_count) {
+        let y = (i as f64) * play_size;
+        line_from_to(GRAY, GRID_STROKE, [0.0, y], [w_w, y], transform, gl);
+      }
+      for i in 1..(horizontal_lines_count) {
+        let x = (i as f64) * play_size;
+        line_from_to(GRAY, GRID_STROKE, [x, 0.0], [x, w_h], transform, gl);
       }
 
       for (i, maybe_player) in all_plays.iter().enumerate() {
