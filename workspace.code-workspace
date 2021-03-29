@@ -94,7 +94,8 @@
       "editor.formatOnSave": true
     },
     "triggerTaskOnSave.tasks": {
-      "cargo test all files": ["src/**/*.rs"]
+      "cargo run": ["src/app/*.rs"],
+      "cargo test all files": ["src/rules/*.rs"]
     }
   }
 }
