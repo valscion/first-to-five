@@ -59,8 +59,9 @@ fn start_gui(area: &mut GameArea) {
     let opengl = OpenGL::V3_2;
 
     // Create an Glutin window.
-    let mut window: Window = WindowSettings::new("first-to-five", [200, 200])
+    let mut window: Window = WindowSettings::new("first-to-five", [400, 400])
         .graphics_api(opengl)
+        .decorated(false)
         .exit_on_esc(true)
         .build()
         .unwrap();
