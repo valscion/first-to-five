@@ -36,7 +36,6 @@ fn example_play(area: &mut GameArea) {
             first_to_play
         };
         area.mark(player, *x, *y).expect("Nobody should've won yet");
-        print_area(&area);
         if area.winner().is_some() {
             println!(
                 "Longest line: {:?}",
@@ -44,13 +43,6 @@ fn example_play(area: &mut GameArea) {
             );
             break;
         }
-    }
-}
-
-fn print_area(area: &GameArea) {
-    println!("{}", area);
-    if let Some(player) = area.winner() {
-        println!("{:?} has won!", player);
     }
 }
 
