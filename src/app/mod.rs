@@ -25,15 +25,16 @@ impl<'a> App<'a> {
     const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
     const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
     const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
-    const GREEN: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
 
     let w_w = args.window_size[0];
     let w_h = args.window_size[1];
 
     // At least 10 items should be renderable in the minimum direction
     let play_size = w_w.min(w_h) / 10.0;
-    // There should be a 2px margin between plays
-    const MARGIN: f64 = 2.0;
+    // There should be a some margin between plays
+    const MARGIN: f64 = 4.0;
+    // The width of the lines for the plays
+    const STROKE: f64 = 2.0;
 
     let area_width = self.game_area.width() as usize;
     let all_plays = self.game_area.all_plays();
@@ -64,10 +65,37 @@ impl<'a> App<'a> {
 
         match maybe_player {
           Some(Player::Cross) => {
-            rectangle(GREEN, [start_x, start_y, size, size], transform, gl);
+            // Draw the cross
+            line_from_to(
+              WHITE,
+              STROKE,
+              [start_x, start_y],
+              [start_x + size, start_y + size],
+              transform,
+              gl,
+            );
+            line_from_to(
+              WHITE,
+              STROKE,
+              [start_x + size, start_y],
+              [start_x, start_y + size],
+              transform,
+              gl,
+            );
           }
           Some(Player::Naught) => {
             ellipse(WHITE, [start_x, start_y, size, size], transform, gl);
+            ellipse(
+              BLACK,
+              [
+                start_x + (STROKE * 2.0),
+                start_y + (STROKE * 2.0),
+                size - (STROKE * 4.0),
+                size - (STROKE * 4.0),
+              ],
+              transform,
+              gl,
+            );
           }
           None => {
             // Empty on purpose
