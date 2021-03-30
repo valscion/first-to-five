@@ -8,7 +8,6 @@ use rules::{GameArea, Player};
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{GlGraphics, OpenGL};
 use piston::event_loop::{EventSettings, Events};
-use piston::input::{RenderEvent, UpdateEvent};
 use piston::window::WindowSettings;
 
 fn main() {
@@ -63,12 +62,6 @@ fn start_gui(area: &mut GameArea) {
 
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {
-        if let Some(args) = e.render_args() {
-            app.render(&args);
-        }
-
-        if let Some(args) = e.update_args() {
-            app.update(&args);
-        }
+        app.event(&e);
     }
 }

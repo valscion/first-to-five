@@ -1,6 +1,6 @@
 use crate::rules::{GameArea, Player};
 use opengl_graphics::GlGraphics;
-use piston::input::{RenderArgs, UpdateArgs};
+use piston::input::{GenericEvent, RenderArgs, UpdateArgs};
 
 pub struct App<'a> {
   gl: GlGraphics,          // OpenGL drawing backend.
@@ -19,7 +19,17 @@ impl<'a> App<'a> {
     app
   }
 
-  pub fn render(&mut self, args: &RenderArgs) {
+  pub fn event(&mut self, e: &impl GenericEvent) {
+    if let Some(args) = e.render_args() {
+      self.render(&args);
+    }
+
+    if let Some(args) = e.update_args() {
+      self.update(&args);
+    }
+  }
+
+  fn render(&mut self, args: &RenderArgs) {
     use graphics::*;
 
     const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
@@ -120,7 +130,7 @@ impl<'a> App<'a> {
     });
   }
 
-  pub fn update(&mut self, args: &UpdateArgs) {
+  fn update(&mut self, args: &UpdateArgs) {
     // Rotate 2 radians per second.
     self.rotation += 2.0 * args.dt;
   }
