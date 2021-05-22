@@ -4,17 +4,12 @@ use piston::input::{GenericEvent, RenderArgs, UpdateArgs};
 
 pub struct App<'a> {
   gl: GlGraphics,          // OpenGL drawing backend.
-  rotation: f64,           // Rotation for the square.
   game_area: &'a GameArea, // The game area we're running
 }
 
 impl<'a> App<'a> {
   pub fn new(gl: GlGraphics, game_area: &'a mut GameArea) -> App<'a> {
-    let app = Self {
-      gl,
-      rotation: 0.0,
-      game_area,
-    };
+    let app = Self { gl, game_area };
     println!("Initialized App with game area:\n{}", app.game_area);
     app
   }
@@ -130,8 +125,7 @@ impl<'a> App<'a> {
     });
   }
 
-  fn update(&mut self, args: &UpdateArgs) {
-    // Rotate 2 radians per second.
-    self.rotation += 2.0 * args.dt;
+  fn update(&mut self, _args: &UpdateArgs) {
+    // TODO: Do something
   }
 }
