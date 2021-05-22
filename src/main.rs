@@ -1,9 +1,10 @@
 mod app;
 mod rules;
-use app::App;
+use app::{App, AppSettings};
 use itertools::Itertools;
 use rand::random;
 use rules::{GameArea, Player};
+use winit;
 
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{GlGraphics, OpenGL};
@@ -49,16 +50,39 @@ fn start_gui(area: &mut GameArea) {
     // Change this to OpenGL::V2_1 if not working.
     let opengl = OpenGL::V3_2;
 
+    let event_loop = winit::event_loop::EventLoop::new();
+    let temporary_window = winit::window::Window::new(&event_loop).unwrap();
+    let (resolution, scale_factor) = match temporary_window.primary_monitor() {
+        Some(monitor) => (monitor.size(), monitor.scale_factor()),
+        None => {
+            panic!("Could not get monitor size")
+        }
+    };
+    drop(temporary_window);
+
+    println!(
+        "Resolution: {:?}, scale_factor: {}",
+        resolution, scale_factor
+    );
+
     // Create an Glutin window.
-    let mut window: Window = WindowSettings::new("first-to-five", [400, 400])
-        .graphics_api(opengl)
-        .decorated(false)
-        .exit_on_esc(true)
-        .build()
-        .unwrap();
+    let mut window: Window = WindowSettings::new(
+        "first-to-five",
+        [
+            (resolution.width as f64 / scale_factor),
+            (resolution.height as f64 / scale_factor),
+        ],
+    )
+    .graphics_api(opengl)
+    .fullscreen(false)
+    .resizable(true)
+    .exit_on_esc(true)
+    .build()
+    .unwrap();
 
     // Create a new game and run it.
-    let mut app = App::new(GlGraphics::new(opengl), area);
+    let app_settings = AppSettings { scale_factor };
+    let mut app = App::new(GlGraphics::new(opengl), area, app_settings);
 
     let mut events = Events::new(EventSettings::new());
     while let Some(e) = events.next(&mut window) {

@@ -438,6 +438,7 @@ dependencies = [
  "pistoncore-glutin_window",
  "proptest",
  "rand",
+ "winit",
 ]
 
 [[package]]

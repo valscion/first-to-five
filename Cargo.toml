@@ -13,6 +13,7 @@ pistoncore-glutin_window = "0.68.2"
 piston2d-opengl_graphics = "0.77.0"
 itertools = "0.10.0"
 rand = "0.8"
+winit = "*"
 
 [dev-dependencies]
 colored-diff = "0.2.2"
